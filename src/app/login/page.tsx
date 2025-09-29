@@ -15,6 +15,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  
   const router = useRouter();
   const { login } = useAuth();
 
@@ -37,15 +38,21 @@ export default function Login() {
         throw new Error(data.message || data.error || "Login failed");
       }
 
-      const { token, role } = data;
-      const id = data.id || data.data?.id;
+      const { token, data:user } = data;
+      const {id, role} = user
 
       if (!token) throw new Error("No token returned from server");
 
       login({ token, role, id });
 
-      if (role === "admin") router.push("/admin");
-      else router.push(`/employee/${id}`);
+      if (role === "admin") {
+        router.push(`/admin/${id}`);
+        console.log('going to admin')
+      }
+      else{
+        router.push(`/employee/${id}`);
+        console.log('going to employees')
+      }
     } catch (error) {
       setErr((error as Error).message || "خطأ في الاتصال");
     } finally {

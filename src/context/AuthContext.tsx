@@ -12,6 +12,7 @@ type AuthState = {
 };
 
 type AuthContextType = {
+  id?: string | null
   auth: AuthState;
   loading: boolean;
   login: (payload: { token: string; role: Exclude<Role, null>; id?: string | null }) => void;
