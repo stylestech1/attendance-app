@@ -15,7 +15,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  
+
   const router = useRouter();
   const { login } = useAuth();
 
@@ -38,8 +38,8 @@ export default function Login() {
         throw new Error(data.message || data.error || "Login failed");
       }
 
-      const { token, data:user } = data;
-      const {id, role} = user
+      const { token, data: user } = data;
+      const { id, role } = user;
 
       if (!token) throw new Error("No token returned from server");
 
@@ -47,11 +47,10 @@ export default function Login() {
 
       if (role === "admin") {
         router.push(`/admin/${id}`);
-        console.log('going to admin')
-      }
-      else{
+        console.log("going to admin");
+      } else {
         router.push(`/employee/${id}`);
-        console.log('going to employees')
+        console.log("going to employees");
       }
     } catch (error) {
       setErr((error as Error).message || "خطأ في الاتصال");
@@ -63,7 +62,9 @@ export default function Login() {
   return (
     <>
       <section className="container mx-auto min-h-[90vh] flex flex-col items-center justify-center">
-        <h1 className={`text-5xl font-bold text-center text-blue-600 my-5 ${arizonia.className}`}>
+        <h1
+          className={`text-5xl font-bold text-center text-blue-600 my-5 ${arizonia.className}`}
+        >
           Styles Disptach EG
         </h1>
 

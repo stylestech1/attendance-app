@@ -43,6 +43,8 @@ const EmployeeAttendance = () => {
   const [profile, setProfile] = useState<TProfile | null>(null);
   const [attendance, setAttendance] = useState<TAttendance[]>([]);
   const [pagination, setPagination] = useState<TPagination | null>(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
 
@@ -88,14 +90,21 @@ const EmployeeAttendance = () => {
   useEffect(() => {
     if (!profile?.jobId) return;
 
-    const from = "2025-01-01";
-    const to = "2025-12-31";
-
     const fetchAttendance = async () => {
       try {
         setLoading(true);
+
+        const query = new URLSearchParams({
+          page: String(page),
+          limit: String(20),
+          search: String(profile?.jobId || '')
+        })
+
+        if(fromDate) query.append('from', fromDate)
+        if(toDate) query.append('to', toDate)
+        
         const res = await fetch(
-          `${apiURL}/api/v1/attendance?from=${from}&to=${to}&page=${page}=20&search=${profile?.jobId}`,
+          `${apiURL}/api/v1/attendance?${query.toString()}`,
           {
             headers: {
               "Content-type": "application/json",
@@ -119,7 +128,7 @@ const EmployeeAttendance = () => {
       }
     };
     fetchAttendance();
-  }, [profile, page, auth.token]);
+  }, [profile, page, auth.token, fromDate, toDate]);
 
   // Toggling Activation
   const toggleActive = async () => {
@@ -152,6 +161,42 @@ const EmployeeAttendance = () => {
     }
   };
 
+  // Toggling Role
+  const toggleRole = async () => {
+    if (!profile) return;
+
+    try {
+      setLoading(true);
+
+      const newRole = profile.role === "admin" ? "employee" : "admin";
+
+      const res = await fetch(`${apiURL}/api/v1/adminDashboard/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${auth?.token}`,
+        },
+        body: JSON.stringify({ role: newRole }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        alert(result.message || "✅ Role Update");
+        setProfile((prev) =>
+          prev ? { ...prev, role: result.data.role } : prev
+        );
+      } else {
+        alert(result.message || "❌ Failed to update role");
+      }
+    } catch (error) {
+      console.error("Toggle role error:", error);
+      alert(error || "Error updating role");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Logout Function
   const handleLogout = () => {
     logout();
@@ -164,13 +209,45 @@ const EmployeeAttendance = () => {
     <section className="container mx-auto my-20">
       {/* Header */}
       <div className="flex items-center justify-between">
-        {profile && (
-          <h1 className="text-3xl">
-            👀 Preview{" "}
-            <span className="font-bold">{profile.name.split(" ")[0]}</span>{" "}
-            Attendance
-          </h1>
-        )}
+        <div className="flex flex-col items-start gap-2">
+          {profile && (
+            <h1 className="text-3xl">
+              👀 Preview{" "}
+              <span className="font-bold">{profile.name.split(" ")[0]}</span>{" "}
+              Attendance
+            </h1>
+          )}
+          <button
+            onClick={toggleRole}
+            disabled={loading}
+            className="cursor-pointer px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
+          >
+            {loading
+              ? "Updating..."
+              : `Make ${profile?.role === "admin" ? "Employee" : "Admin"}`}
+          </button>
+        </div>
+
+        <div className="flex gap-4 my-5">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">From:</label>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="px-3 py-2 border rounded-md"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">To:</label>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="px-3 py-2 border rounded-md"
+            />
+          </div>
+        </div>
 
         <div className="flex items-center gap-5">
           <button

@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 // importing Components
 import toast from "react-hot-toast";
 import Loading from "@/components/ui/Loading";
+import Link from "next/link";
 
 // types
 type Attendance = {
@@ -351,6 +352,14 @@ const EmployeePage = () => {
             <div className="flex flex-col">
               <span className="font-medium text-gray-600">Job-ID:</span>
               <span className="text-gray-800">{profile.jobId}</span>
+            </div>
+            <div className="flex flex-col">
+              <Link
+                href={"/forgetPassword"}
+                className="text-sm text-blue-800 hover:underline"
+              >
+                I Forgot My Password
+              </Link>
             </div>
           </div>
         </div>

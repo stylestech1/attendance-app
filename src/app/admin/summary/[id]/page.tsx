@@ -3,7 +3,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Loading from "@/components/ui/Loading";
-import Link from "next/link";
 
 // Types
 type TProfile = {
@@ -35,7 +34,9 @@ const Summary = () => {
   const userId = params.id;
 
   const [profile, setProfile] = useState<TProfile | null>(null);
-  const [summary, setSummary] = useState<TSummary | null>(null);
+  const [summary, setSummary] = useState<TSummary[]>([]);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Fetching Information
@@ -79,11 +80,18 @@ const Summary = () => {
   useEffect(() => {
     setLoading(true);
 
+    const query = new URLSearchParams({
+      search: String(profile?.jobId || ""),
+    });
+
+    if (fromDate) query.append("from", fromDate);
+    if (toDate) query.append("to", toDate);
+
     const fetchAttendance = async () => {
       try {
         setLoading(true);
         const res = await fetch(
-          `${apiURL}/api/v1/attendance/summary/${userId}`,
+          `${apiURL}/api/v1/attendance/summary/${userId}?${query.toString()}`,
           {
             headers: {
               "Content-type": "application/json",
@@ -95,7 +103,7 @@ const Summary = () => {
         const result = await res.json();
 
         if (res.ok) {
-          setSummary(result.summary);
+          setSummary([result.summary]);
         } else {
           alert(result.message);
         }
@@ -106,7 +114,7 @@ const Summary = () => {
       }
     };
     fetchAttendance();
-  }, [auth.token, userId]);
+  }, [auth.token, userId, fromDate, toDate, profile]);
 
   // Logout Function
   const handleLogout = () => {
@@ -128,6 +136,27 @@ const Summary = () => {
           </h1>
         )}
 
+        <div className="flex gap-4 my-5">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">From:</label>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="px-3 py-2 border rounded-md"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">To:</label>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="px-3 py-2 border rounded-md"
+            />
+          </div>
+        </div>
+
         <button
           onClick={handleLogout}
           className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors w-fit"
@@ -135,41 +164,6 @@ const Summary = () => {
           Logout
         </button>
       </div>
-
-      {/* Profile Information */}
-      {/* {profile && (
-        <div className="my-10 p-4 bg-gray-50 rounded-lg border w-full">
-          <h2 className="text-lg font-semibold mb-3 text-gray-800">
-            Profile Information
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-            <div className="flex gap-x-2">
-              <span className="font-medium text-gray-600">Name:</span>
-              <span className="text-gray-800">{profile.name}</span>
-            </div>
-            <div className="flex gap-x-2">
-              <span className="font-medium text-gray-600">Email:</span>
-              <span className="text-gray-800">{profile.email}</span>
-            </div>
-            <div className="flex gap-x-2">
-              <span className="font-medium text-gray-600">Phone:</span>
-              <span className="text-gray-800">{profile.phone}</span>
-            </div>
-            <div className="flex gap-x-2">
-              <span className="font-medium text-gray-600">Role:</span>
-              <span className="text-gray-800 capitalize">{profile.role}</span>
-            </div>
-            <div className="flex gap-x-2">
-              <span className="font-medium text-gray-600">Position:</span>
-              <span className="text-gray-800">{profile.position}</span>
-            </div>
-            <div className="flex gap-x-2">
-              <span className="font-medium text-gray-600">Job-ID:</span>
-              <span className="text-gray-800">{profile.jobId}</span>
-            </div>
-          </div>
-        </div>
-      )} */}
 
       {/* Attendance Table */}
       <div className="my-10">
@@ -190,25 +184,23 @@ const Summary = () => {
             </tr>
           </thead>
           <tbody className="text-center">
-            {summary ? (
-              <tr>
-                <td className="border p-2">
-                  {new Date(summary.period.from).toLocaleDateString()}
-                </td>
-                <td className="border p-2">
-                  {new Date(summary.period.to).toLocaleDateString()}
-                </td>
-                <td className="border p-2">{summary.daysWorked}</td>
-                <td className="border p-2">{summary.daysAbsent}</td>
-                <td className="border p-2">{summary.expectedHours}</td>
-                <td className="border p-2">{summary.actualHours.toFixed(2)}</td>
-                <td className="border p-2">
-                  {summary.totalBreakHours.toFixed(2)}
-                </td>
-                <td className="border p-2">
-                  {summary.differenceHours.toFixed(2)}
-                </td>
-              </tr>
+            {summary.length > 0 ? (
+              summary.map((sum, i) => (
+                <tr key={i}>
+                  <td className="border p-2">{sum.period.from}</td>
+                  <td className="border p-2">{sum.period.to}</td>
+                  <td className="border p-2">{sum.daysWorked}</td>
+                  <td className="border p-2">{sum.daysAbsent}</td>
+                  <td className="border p-2">{sum.expectedHours}</td>
+                  <td className="border p-2">{sum.actualHours.toFixed(2)}</td>
+                  <td className="border p-2">
+                    {sum.totalBreakHours.toFixed(2)}
+                  </td>
+                  <td className="border p-2">
+                    {sum.differenceHours.toFixed(2)}
+                  </td>
+                </tr>
+              ))
             ) : (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-gray-500">

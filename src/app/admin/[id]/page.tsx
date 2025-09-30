@@ -189,6 +189,14 @@ const AdminDashboard = () => {
               <span className="font-medium text-gray-600">Job-ID:</span>
               <span className="text-gray-800">{profile.jobId}</span>
             </div>
+            <div className="flex gap-x-2">
+              <Link
+                href={"/forgetPassword"}
+                className="text-sm text-blue-800 hover:underline"
+              >
+                I Forgot My Password
+              </Link>
+            </div>
           </div>
         </div>
       )}
