@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import AlertError from "@/components/ui/AlertError";
 import { Arizonia } from "next/font/google";
+import { FaEyeSlash, FaEye } from "react-icons/fa";
 
 const arizonia = Arizonia({
   weight: "400",
@@ -15,6 +16,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
   const { login } = useAuth();
@@ -95,17 +97,24 @@ export default function Login() {
             />
           </div>
 
-          <div className="flex flex-col gap-2 mb-6">
+          <div className="flex flex-col gap-2 mb-6 relative">
             <label htmlFor="password">Password</label>
             <input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              type="password"
+              type={showPassword ? "text" : "password"}
               id="password"
               required
               placeholder="*******"
               className="px-5 py-3 rounded-md border border-gray-400"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-11.5 text-gray-600 cursor-pointer"
+            >
+              {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+            </button>
           </div>
 
           <button

@@ -3,7 +3,8 @@ import AlertError from "@/components/ui/AlertError";
 import Loading from "@/components/ui/Loading";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { FaEyeSlash, FaEye } from "react-icons/fa";
 
 const RestPassword = () => {
   const { auth, logout } = useAuth();
@@ -11,6 +12,9 @@ const RestPassword = () => {
 
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [showPasswordCurrent, setShowPasswordCurrent] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [form, setForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -101,43 +105,64 @@ const RestPassword = () => {
         {err && <AlertError>{err}</AlertError>}
 
         <div className="grid grid-cols-1 gap-5 my-5">
-          <div className="flex flex-col gap-2 mb-4">
+          <div className="flex flex-col gap-2 mb-4 relative">
             <label htmlFor="currentPassword">Current Password</label>
             <input
               value={form.currentPassword}
               onChange={handleChange}
-              type="password"
+              type={showPasswordCurrent ? "text" : "password"}
               id="currentPassword"
               required
               placeholder="Your Current Password"
               className="px-5 py-3 rounded-md border border-gray-400"
             />
+            <button
+              type="button"
+              onClick={() => setShowPasswordCurrent((prev) => !prev)}
+              className="absolute right-3 top-11.5 text-gray-600 cursor-pointer"
+            >
+              {showPasswordCurrent ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+            </button>
           </div>
 
-          <div className="flex flex-col gap-2 mb-4">
+          <div className="flex flex-col gap-2 mb-4 relative">
             <label htmlFor="newPassword">New Password</label>
             <input
               value={form.newPassword}
               onChange={handleChange}
-              type="password"
+              type={showNewPassword ? "text" : "password"}
               id="newPassword"
               required
               placeholder="Enter New Password"
               className="px-5 py-3 rounded-md border border-gray-400"
             />
+            <button
+              type="button"
+              onClick={() => setShowNewPassword((prev) => !prev)}
+              className="absolute right-3 top-11.5 text-gray-600 cursor-pointer"
+            >
+              {showNewPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+            </button>
           </div>
 
-          <div className="flex flex-col gap-2 mb-4">
+          <div className="flex flex-col gap-2 mb-4 relative">
             <label htmlFor="newPasswordConfirm">Confirm New Password</label>
             <input
               value={form.newPasswordConfirm}
               onChange={handleChange}
-              type="password"
+              type={showPasswordConfirm ? "text" : "password"}
               id="newPasswordConfirm"
               required
               placeholder="Confirm New Password"
               className="px-5 py-3 rounded-md border border-gray-400"
             />
+            <button
+              type="button"
+              onClick={() => setShowPasswordConfirm((prev) => !prev)}
+              className="absolute right-3 top-11.5 text-gray-600 cursor-pointer"
+            >
+              {showPasswordConfirm ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+            </button>
           </div>
         </div>
 

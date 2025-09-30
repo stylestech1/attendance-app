@@ -3,7 +3,8 @@ import AlertError from "@/components/ui/AlertError";
 import Loading from "@/components/ui/Loading";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { FaEyeSlash, FaEye } from "react-icons/fa";
 
 const AddUser = () => {
   const { auth, logout } = useAuth();
@@ -11,6 +12,9 @@ const AddUser = () => {
 
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -149,30 +153,44 @@ const AddUser = () => {
             />
           </div>
 
-          <div className="flex flex-col gap-2 mb-4">
+          <div className="flex flex-col gap-2 mb-4 relative">
             <label htmlFor="password">Password</label>
             <input
               value={form.password}
               onChange={handleChange}
-              type="password"
+              type={showPassword ? "text" : "password"}
               id="password"
               required
               placeholder="Enter new password"
               className="px-5 py-3 rounded-md border border-gray-400"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-11.5 text-gray-600 cursor-pointer"
+            >
+              {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+            </button>
           </div>
 
-          <div className="flex flex-col gap-2 mb-4">
+          <div className="flex flex-col gap-2 mb-4 relative">
             <label htmlFor="passwordConfirmation">Confirm Password</label>
             <input
               value={form.passwordConfirmation}
               onChange={handleChange}
-              type="password"
+              type={showPasswordConfirm ? "text" : "password"}
               id="passwordConfirmation"
               required
               placeholder="Confirm password"
               className="px-5 py-3 rounded-md border border-gray-400"
             />
+            <button
+              type="button"
+              onClick={() => setShowPasswordConfirm((prev) => !prev)}
+              className="absolute right-3 top-11.5 text-gray-600 cursor-pointer"
+            >
+              {showPasswordConfirm ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+            </button>
           </div>
 
           <div className="flex flex-col gap-2 mb-4">
