@@ -4,23 +4,23 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Loading from "@/components/ui/Loading";
 import Link from "next/link";
-import { 
-  FaSignOutAlt, 
-  FaUser, 
-  FaEnvelope, 
-  FaPhone, 
-  FaBriefcase, 
-  FaIdBadge, 
-  FaUserShield, 
-  FaUserCheck, 
-  FaUserTimes, 
+import {
+  FaSignOutAlt,
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaBriefcase,
+  FaIdBadge,
+  FaUserShield,
+  FaUserCheck,
+  FaUserTimes,
   FaCalendarAlt,
   FaClock,
   FaHistory,
   FaChartBar,
-  FaArrowLeft,
-  FaEye
+  FaEye,
 } from "react-icons/fa";
+import toast, { Toaster } from "react-hot-toast";
 
 // Types
 type TProfile = {
@@ -87,13 +87,16 @@ const EmployeeAttendance = () => {
         if (res.ok) {
           setProfile(result.data);
         } else {
-          alert(result.message);
+          toast.error(result.message, {
+            style: { background: "#dc2626", color: "#fff" },
+          });
         }
       } catch (error) {
-        console.error("Fetch user data error:", error);
-        alert(
-          error instanceof Error ? error.message : "Failed to load profile"
-        );
+        if (error instanceof Error) {
+          toast.error(error.message, {
+            style: { background: "#dc2626", color: "#fff" },
+          });
+        }
         logout();
       } finally {
         setLoading(false);
@@ -113,12 +116,12 @@ const EmployeeAttendance = () => {
         const query = new URLSearchParams({
           page: String(page),
           limit: String(20),
-          search: String(profile?.jobId || '')
-        })
+          search: String(profile?.jobId || ""),
+        });
 
-        if(fromDate) query.append('from', fromDate)
-        if(toDate) query.append('to', toDate)
-        
+        if (fromDate) query.append("from", fromDate);
+        if (toDate) query.append("to", toDate);
+
         const res = await fetch(
           `${apiURL}/api/v1/attendance?${query.toString()}`,
           {
@@ -135,7 +138,9 @@ const EmployeeAttendance = () => {
           setAttendance(result.data);
           setPagination(result.paginationResult);
         } else {
-          alert(result.message);
+          toast.error(result.message, {
+            style: { background: "#dc2626", color: "#fff" },
+          });
         }
       } catch (error) {
         console.error("Fetch attendance error:", error);
@@ -168,7 +173,9 @@ const EmployeeAttendance = () => {
       if (res.ok) {
         setProfile((prev) => (prev ? { ...prev, active: !prev.active } : prev));
       } else {
-        alert(result.message);
+        toast.error(result.message, {
+          style: { background: "#dc2626", color: "#fff" },
+        });
       }
     } catch (error) {
       console.error("Toggle active error:", error);
@@ -198,16 +205,23 @@ const EmployeeAttendance = () => {
       const result = await res.json();
 
       if (res.ok) {
-        alert(result.message || "✅ Role Update");
+        toast.success(result.message, {
+          style: { background: "#16a34a", color: "#fff" },
+        });
         setProfile((prev) =>
           prev ? { ...prev, role: result.data.role } : prev
         );
       } else {
-        alert(result.message || "❌ Failed to update role");
+        toast.error(result.message, {
+          style: { background: "#dc2626", color: "#fff" },
+        });
       }
     } catch (error) {
-      console.error("Toggle role error:", error);
-      alert(error || "Error updating role");
+      if (error instanceof Error) {
+        toast.error(error.message, {
+          style: { background: "#dc2626", color: "#fff" },
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -240,6 +254,8 @@ const EmployeeAttendance = () => {
               </p>
             </div>
           </div>
+
+          <Toaster position="top-center" reverseOrder={false} />
 
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
             {/* Date Filters */}
@@ -277,7 +293,9 @@ const EmployeeAttendance = () => {
                 className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50"
               >
                 <FaUserShield size={16} />
-                {loading ? "Updating..." : `Make ${profile?.role === "admin" ? "Employee" : "Admin"}`}
+                {loading
+                  ? "Updating..."
+                  : `Make ${profile?.role === "admin" ? "Employee" : "Admin"}`}
               </button>
 
               <button
@@ -301,7 +319,7 @@ const EmployeeAttendance = () => {
                 </div>
                 Profile Information
               </h2>
-              
+
               <button
                 onClick={toggleActive}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 ${
@@ -310,7 +328,11 @@ const EmployeeAttendance = () => {
                     : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
                 }`}
               >
-                {profile?.active ? <FaUserTimes size={16} /> : <FaUserCheck size={16} />}
+                {profile?.active ? (
+                  <FaUserTimes size={16} />
+                ) : (
+                  <FaUserCheck size={16} />
+                )}
                 {profile?.active ? "Deactivate" : "Activate"}
               </button>
             </div>
@@ -320,28 +342,41 @@ const EmployeeAttendance = () => {
                 { icon: FaUser, label: "Name", value: profile.name },
                 { icon: FaEnvelope, label: "Email", value: profile.email },
                 { icon: FaPhone, label: "Phone", value: profile.phone },
-                { icon: FaBriefcase, label: "Position", value: profile.position },
+                {
+                  icon: FaBriefcase,
+                  label: "Position",
+                  value: profile.position,
+                },
                 { icon: FaIdBadge, label: "Job ID", value: profile.jobId },
-                { 
-                  icon: FaUserShield, 
-                  label: "Role", 
+                {
+                  icon: FaUserShield,
+                  label: "Role",
                   value: profile.role,
                   badge: true,
-                  color: profile.role === "admin" ? "purple" : "blue"
-                }
+                  color: profile.role === "admin" ? "purple" : "blue",
+                },
               ].map((item, index) => (
-                <div key={index} className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 hover:border-blue-200 transition-colors duration-200">
+                <div
+                  key={index}
+                  className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 hover:border-blue-200 transition-colors duration-200"
+                >
                   <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                    <item.icon className={`text-${item.color || 'blue'}-600`} />
+                    <item.icon className={`text-${item.color || "blue"}-600`} />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{item.label}</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      {item.label}
+                    </p>
                     {item.badge ? (
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-${item.color}-100 text-${item.color}-800 border border-${item.color}-200 capitalize`}>
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-${item.color}-100 text-${item.color}-800 border border-${item.color}-200 capitalize`}
+                      >
                         {item.value}
                       </span>
                     ) : (
-                      <p className="font-semibold text-gray-800">{item.value}</p>
+                      <p className="font-semibold text-gray-800">
+                        {item.value}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -359,9 +394,11 @@ const EmployeeAttendance = () => {
                   <FaHistory className="text-blue-500" />
                   Attendance Records
                 </h2>
-                <p className="text-gray-600 text-sm">Detailed attendance history and time tracking</p>
+                <p className="text-gray-600 text-sm">
+                  Detailed attendance history and time tracking
+                </p>
               </div>
-              
+
               <Link
                 href={`/admin/summary/${userId}`}
                 className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
@@ -376,18 +413,31 @@ const EmployeeAttendance = () => {
             <table className="w-full">
               <thead className="bg-gray-50/80 backdrop-blur-sm">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Check In</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Check Out</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Worked Hours</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Break Time</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Check In
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Check Out
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Worked Hours
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Break Time
+                  </th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-gray-200/60">
                 {attendance.length > 0 ? (
                   attendance.map((record, i) => (
-                    <tr key={i} className="hover:bg-blue-50/30 transition-colors duration-150 group">
+                    <tr
+                      key={i}
+                      className="hover:bg-blue-50/30 transition-colors duration-150 group"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
@@ -395,12 +445,15 @@ const EmployeeAttendance = () => {
                           </div>
                           <div>
                             <div className="font-semibold text-gray-900">
-                              {new Date(record.date).toLocaleDateString('en-US', { 
-                                weekday: 'short',
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })}
+                              {new Date(record.date).toLocaleDateString(
+                                "en-US",
+                                {
+                                  weekday: "short",
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )}
                             </div>
                           </div>
                         </div>
@@ -448,12 +501,13 @@ const EmployeeAttendance = () => {
                         <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
                           <FaHistory className="text-gray-600 text-2xl" />
                         </div>
-                        <h3 className="text-xl font-semibold text-gray-700 mb-2">No attendance records</h3>
+                        <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                          No attendance records
+                        </h3>
                         <p className="text-gray-500 mb-4 text-center">
-                          {fromDate || toDate 
-                            ? 'No attendance records found for the selected date range.' 
-                            : 'No attendance records available for this employee.'
-                          }
+                          {fromDate || toDate
+                            ? "No attendance records found for the selected date range."
+                            : "No attendance records available for this employee."}
                         </p>
                       </div>
                     </td>
@@ -468,7 +522,9 @@ const EmployeeAttendance = () => {
         {pagination && attendance.length > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 p-6 bg-white rounded-2xl shadow-lg border border-gray-200">
             <div className="text-sm text-gray-600">
-              Showing page <span className="font-semibold">{pagination.currentPage}</span> of <span className="font-semibold">{pagination.totalPages}</span>
+              Showing page{" "}
+              <span className="font-semibold">{pagination.currentPage}</span> of{" "}
+              <span className="font-semibold">{pagination.totalPages}</span>
             </div>
             <div className="flex gap-2">
               <button
@@ -480,7 +536,9 @@ const EmployeeAttendance = () => {
               </button>
               <button
                 disabled={page >= pagination.totalPages}
-                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+                onClick={() =>
+                  setPage((p) => Math.min(pagination.totalPages, p + 1))
+                }
                 className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all duration-200 hover:shadow-md"
               >
                 Next

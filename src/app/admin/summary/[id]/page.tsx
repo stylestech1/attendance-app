@@ -3,18 +3,19 @@ import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Loading from "@/components/ui/Loading";
-import { 
-  FaSignOutAlt, 
-  FaUser, 
-  FaChartBar, 
-  FaCalendarAlt, 
-  FaClock, 
-  FaCalendarCheck, 
-  FaCalendarTimes, 
+import {
+  FaSignOutAlt,
+  FaUser,
+  FaChartBar,
+  FaCalendarAlt,
+  FaClock,
+  FaCalendarCheck,
+  FaCalendarTimes,
   FaBalanceScale,
   FaCoffee,
-  FaArrowLeft
+  FaArrowLeft,
 } from "react-icons/fa";
+import toast, { Toaster } from "react-hot-toast";
 
 // Types
 type TProfile = {
@@ -73,13 +74,16 @@ const Summary = () => {
         if (res.ok) {
           setProfile(result.data);
         } else {
-          alert(result.message);
+          toast.error(result.message, {
+            style: { background: "#dc2626", color: "#fff" },
+          });
         }
       } catch (error) {
-        console.error("Fetch user data error:", error);
-        alert(
-          error instanceof Error ? error.message : "Failed to load profile"
-        );
+        if (error instanceof Error) {
+          toast.error(error.message, {
+            style: { background: "#dc2626", color: "#fff" },
+          });
+        }
         logout();
       } finally {
         setLoading(false);
@@ -117,7 +121,9 @@ const Summary = () => {
         if (res.ok) {
           setSummary([result.summary]);
         } else {
-          alert(result.message);
+          toast.error(result.message, {
+            style: { background: "#dc2626", color: "#fff" },
+          });
         }
       } catch (error) {
         console.error("Fetch attendance error:", error);
@@ -160,6 +166,8 @@ const Summary = () => {
               </p>
             </div>
           </div>
+
+          <Toaster position="top-center" reverseOrder={false} />
 
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
             {/* Date Filters */}
@@ -217,8 +225,12 @@ const Summary = () => {
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Days Worked</p>
-                  <p className="text-3xl font-bold text-gray-800 mt-2">{summary[0].daysWorked}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Days Worked
+                  </p>
+                  <p className="text-3xl font-bold text-gray-800 mt-2">
+                    {summary[0].daysWorked}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                   <FaCalendarCheck className="text-green-600 text-xl" />
@@ -236,8 +248,12 @@ const Summary = () => {
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Days Absent</p>
-                  <p className="text-3xl font-bold text-gray-800 mt-2">{summary[0].daysAbsent}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Days Absent
+                  </p>
+                  <p className="text-3xl font-bold text-gray-800 mt-2">
+                    {summary[0].daysAbsent}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
                   <FaCalendarTimes className="text-red-600 text-xl" />
@@ -255,8 +271,12 @@ const Summary = () => {
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Actual Hours</p>
-                  <p className="text-3xl font-bold text-gray-800 mt-2">{summary[0].actualHours.toFixed(1)}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Actual Hours
+                  </p>
+                  <p className="text-3xl font-bold text-gray-800 mt-2">
+                    {summary[0].actualHours.toFixed(1)}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                   <FaClock className="text-blue-600 text-xl" />
@@ -273,8 +293,12 @@ const Summary = () => {
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Break Time</p>
-                  <p className="text-3xl font-bold text-gray-800 mt-2">{summary[0].totalBreakHours.toFixed(1)}h</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Break Time
+                  </p>
+                  <p className="text-3xl font-bold text-gray-800 mt-2">
+                    {summary[0].totalBreakHours.toFixed(1)}h
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
                   <FaCoffee className="text-orange-600 text-xl" />
@@ -302,18 +326,27 @@ const Summary = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Expected Hours:</span>
-                  <span className="font-semibold text-gray-800">{summary[0].expectedHours}h</span>
+                  <span className="font-semibold text-gray-800">
+                    {summary[0].expectedHours}h
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Actual Hours:</span>
-                  <span className="font-semibold text-gray-800">{summary[0].actualHours.toFixed(2)}h</span>
+                  <span className="font-semibold text-gray-800">
+                    {summary[0].actualHours.toFixed(2)}h
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Difference:</span>
-                  <span className={`font-semibold ${
-                    summary[0].differenceHours >= 0 ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {summary[0].differenceHours >= 0 ? '+' : ''}{summary[0].differenceHours.toFixed(2)}h
+                  <span
+                    className={`font-semibold ${
+                      summary[0].differenceHours >= 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {summary[0].differenceHours >= 0 ? "+" : ""}
+                    {summary[0].differenceHours.toFixed(2)}h
                   </span>
                 </div>
               </div>
@@ -329,24 +362,39 @@ const Summary = () => {
                 <div>
                   <div className="flex justify-between text-sm text-gray-600 mb-2">
                     <span>Attendance Rate</span>
-                    <span>{((summary[0].daysWorked / (summary[0].daysWorked + summary[0].daysAbsent)) * 100).toFixed(1)}%</span>
+                    <span>
+                      {(
+                        (summary[0].daysWorked /
+                          (summary[0].daysWorked + summary[0].daysAbsent)) *
+                        100
+                      ).toFixed(1)}
+                      %
+                    </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-green-500 h-2 rounded-full transition-all duration-500" 
-                      style={{ 
-                        width: `${(summary[0].daysWorked / (summary[0].daysWorked + summary[0].daysAbsent)) * 100}%` 
+                    <div
+                      className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${
+                          (summary[0].daysWorked /
+                            (summary[0].daysWorked + summary[0].daysAbsent)) *
+                          100
+                        }%`,
                       }}
                     ></div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div className="p-3 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">{summary[0].daysWorked}</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {summary[0].daysWorked}
+                    </div>
                     <div className="text-sm text-green-600">Days Worked</div>
                   </div>
                   <div className="p-3 bg-red-50 rounded-lg">
-                    <div className="text-2xl font-bold text-red-600">{summary[0].daysAbsent}</div>
+                    <div className="text-2xl font-bold text-red-600">
+                      {summary[0].daysAbsent}
+                    </div>
                     <div className="text-sm text-red-600">Days Absent</div>
                   </div>
                 </div>
@@ -362,46 +410,69 @@ const Summary = () => {
               <FaChartBar className="text-blue-500" />
               Detailed Summary Report
             </h2>
-            <p className="text-gray-600 text-sm">Comprehensive overview of attendance and performance metrics</p>
+            <p className="text-gray-600 text-sm">
+              Comprehensive overview of attendance and performance metrics
+            </p>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50/80 backdrop-blur-sm">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Period</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">From Date</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">To Date</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Days Worked</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Days Absent</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Expected Hours</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actual Hours</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Break Hours</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Difference</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Period
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    From Date
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    To Date
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Days Worked
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Days Absent
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Expected Hours
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Actual Hours
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Break Hours
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Difference
+                  </th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-gray-200/60">
                 {summary.length > 0 ? (
                   summary.map((sum, i) => (
-                    <tr key={i} className="hover:bg-blue-50/30 transition-colors duration-150 group">
+                    <tr
+                      key={i}
+                      className="hover:bg-blue-50/30 transition-colors duration-150 group"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
                           Period {i + 1}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-900">
-                        {new Date(sum.period.from).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
+                        {new Date(sum.period.from).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
                         })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-900">
-                        {new Date(sum.period.to).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
+                        {new Date(sum.period.to).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
                         })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -426,12 +497,15 @@ const Summary = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${
-                          sum.differenceHours >= 0 
-                            ? 'bg-green-100 text-green-800 border-green-200' 
-                            : 'bg-red-100 text-red-800 border-red-200'
-                        }`}>
-                          {sum.differenceHours >= 0 ? '+' : ''}{sum.differenceHours.toFixed(2)}h
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${
+                            sum.differenceHours >= 0
+                              ? "bg-green-100 text-green-800 border-green-200"
+                              : "bg-red-100 text-red-800 border-red-200"
+                          }`}
+                        >
+                          {sum.differenceHours >= 0 ? "+" : ""}
+                          {sum.differenceHours.toFixed(2)}h
                         </span>
                       </td>
                     </tr>
@@ -443,12 +517,13 @@ const Summary = () => {
                         <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
                           <FaChartBar className="text-gray-600 text-2xl" />
                         </div>
-                        <h3 className="text-xl font-semibold text-gray-700 mb-2">No summary data</h3>
+                        <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                          No summary data
+                        </h3>
                         <p className="text-gray-500 mb-4 text-center">
-                          {fromDate || toDate 
-                            ? 'No summary data found for the selected date range.' 
-                            : 'Select a date range to view attendance summary.'
-                          }
+                          {fromDate || toDate
+                            ? "No summary data found for the selected date range."
+                            : "Select a date range to view attendance summary."}
                         </p>
                       </div>
                     </td>

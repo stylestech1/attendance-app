@@ -11,13 +11,13 @@ const arizonia = Arizonia({
   subsets: ["latin"],
 });
 
-// toast.success(result.message || "Profile updated successfully! ✅", {
+// toast.success(result.message, {
 //         style: { background: "#16a34a", color: "#fff" },
 //       });
 // catch (error) {
 //       if (error instanceof Error) {
-//         setErr(error.message || "Update failed");
-//         toast.error(error.message || "Update failed ❌", {
+//         setErr(error.message);
+//         toast.error(error.message, {
 //           style: { background: "#dc2626", color: "#fff" },
 //         });
 //       }

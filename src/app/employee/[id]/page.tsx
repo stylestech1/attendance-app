@@ -2,23 +2,23 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import Loading from "@/components/ui/Loading";
 import Link from "next/link";
-import { 
-  FaSignOutAlt, 
-  FaUser, 
-  FaEnvelope, 
-  FaPhone, 
-  FaBriefcase, 
-  FaIdBadge, 
+import {
+  FaSignOutAlt,
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaBriefcase,
+  FaIdBadge,
   FaKey,
   FaClock,
   FaHistory,
   FaPlay,
   FaStop,
   FaCoffee,
-  FaBusinessTime
+  FaBusinessTime,
 } from "react-icons/fa";
 
 // types
@@ -67,20 +67,20 @@ const EmployeePage = () => {
 
   // Save employee state to localStorage
   const saveEmployeeState = (state: EmployeeState) => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       localStorage.setItem(`employeeState_${id}`, JSON.stringify(state));
     }
   };
 
   // Load employee state from localStorage
   const loadEmployeeState = (): EmployeeState | null => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const saved = localStorage.getItem(`employeeState_${id}`);
       if (saved) {
         try {
           return JSON.parse(saved);
         } catch (err) {
-          console.error('Error parsing saved state:', err);
+          console.error("Error parsing saved state:", err);
           return null;
         }
       }
@@ -90,7 +90,7 @@ const EmployeePage = () => {
 
   // Clear employee state from localStorage
   const clearEmployeeState = () => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       localStorage.removeItem(`employeeState_${id}`);
     }
   };
@@ -109,11 +109,13 @@ const EmployeePage = () => {
     if (savedState) {
       setIsCheckedIn(savedState.isCheckedIn);
       setIsBreak(savedState.isBreak);
-      
+
       // إذا كان فيه attendance محفوظ، أضفه للجدول
       if (savedState.currentAttendance) {
-        setAttendance(prev => {
-          const exists = prev.some(att => att.id === savedState.currentAttendance?.id);
+        setAttendance((prev) => {
+          const exists = prev.some(
+            (att) => att.id === savedState.currentAttendance?.id
+          );
           if (!exists && savedState.currentAttendance) {
             return [savedState.currentAttendance, ...prev];
           }
@@ -137,7 +139,9 @@ const EmployeePage = () => {
 
     if (!id) {
       console.log("No employee ID found");
-      alert("Employee ID is missing");
+      toast.error("Employee ID is missing", {
+        style: { background: "#dc2626", color: "#fff" },
+      });
       return;
     }
 
@@ -156,7 +160,9 @@ const EmployeePage = () => {
           const err = await res.json();
 
           if (res.status === 401 || res.status === 403) {
-            alert("Session expired. Please login again.");
+            toast.error("Session expired. Please login again.", {
+              style: { background: "#dc2626", color: "#fff" },
+            });
             logout();
             return;
           }
@@ -173,8 +179,11 @@ const EmployeePage = () => {
           throw new Error("No user data received from server");
         }
       } catch (err) {
-        console.error("Fetch user data error:", err);
-        alert(err instanceof Error ? err.message : "Failed to load profile");
+        if (err instanceof Error) {
+          toast.error(err.message || "Profile loaded failed ❌", {
+            style: { background: "#dc2626", color: "#fff" },
+          });
+        }
 
         if (
           err instanceof Error &&
@@ -218,7 +227,9 @@ const EmployeePage = () => {
         // دمج البيانات المحفوظة مع البيانات من السيرفر
         const savedState = loadEmployeeState();
         if (savedState?.currentAttendance) {
-          const exists = attendanceData.some(att => att.id === savedState.currentAttendance?.id);
+          const exists = attendanceData.some(
+            (att) => att.id === savedState.currentAttendance?.id
+          );
           if (!exists) {
             attendanceData = [savedState.currentAttendance, ...attendanceData];
           }
@@ -227,18 +238,17 @@ const EmployeePage = () => {
         setAttendance(attendanceData);
 
         // تحديث حالة checkin/break بناءً على البيانات
-        const ongoingAttendance = attendanceData.find(att => 
-          att.checkInAt && !att.checkOutAt
+        const ongoingAttendance = attendanceData.find(
+          (att) => att.checkInAt && !att.checkOutAt
         );
 
         if (ongoingAttendance) {
           setIsCheckedIn(true);
           const hasActiveBreak = ongoingAttendance.breaks?.some(
-            breakItem => breakItem.start && !breakItem.end
+            (breakItem) => breakItem.start && !breakItem.end
           );
           setIsBreak(!!hasActiveBreak);
         }
-
       } catch (err) {
         console.log("Attendance fetch error:", err);
       }
@@ -250,7 +260,9 @@ const EmployeePage = () => {
   // Check In function
   const handleCheckIn = async () => {
     if (!auth?.token) {
-      alert("Please login first");
+      toast.error("Please login first", {
+        style: { background: "#dc2626", color: "#fff" },
+      });
       return;
     }
 
@@ -269,7 +281,9 @@ const EmployeePage = () => {
 
       if (!res.ok) {
         if (result.message) {
-          alert(result.message);
+          toast.error(result.message || "Check-in failed! ✅", {
+            style: { background: "#16a34a", color: "#fff" },
+          });
           return;
         }
         throw new Error(result.message || "Check-in failed");
@@ -278,11 +292,11 @@ const EmployeePage = () => {
       if (result.data) {
         const newAttendance: Attendance = {
           ...result.data,
-          date: new Date().toISOString().split('T')[0],
+          date: new Date().toISOString().split("T")[0],
           checkInAt: new Date().toISOString(),
           checkOutAt: null,
           totalWorkedHours: "0.00",
-          totalBreakMinutes: "0"
+          totalBreakMinutes: "0",
         };
 
         // حفظ في localStorage
@@ -291,19 +305,24 @@ const EmployeePage = () => {
           isBreak: false,
           lastCheckInTime: new Date().toISOString(),
           lastAttendanceId: result.data.id,
-          currentAttendance: newAttendance
+          currentAttendance: newAttendance,
         });
 
         // تحديث state
-        setAttendance(prev => [newAttendance, ...prev]);
+        setAttendance((prev) => [newAttendance, ...prev]);
       }
 
       setIsCheckedIn(true);
       setIsBreak(false);
-      toast.success(result.message || "Checked in successfully");
-    } catch (err) {
-      console.error("Check-in error:", err);
-      alert(err instanceof Error ? err.message : "Check-in failed");
+      toast.success(result.message || "Checkin successfully! ✅", {
+        style: { background: "#16a34a", color: "#fff" },
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message, {
+          style: { background: "#dc2626", color: "#fff" },
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -312,7 +331,9 @@ const EmployeePage = () => {
   // Check Out function
   const handleCheckOut = async () => {
     if (!auth?.token) {
-      alert("Please login first");
+      toast.error("Please login first", {
+        style: { background: "#dc2626", color: "#fff" },
+      });
       return;
     }
 
@@ -336,10 +357,8 @@ const EmployeePage = () => {
 
       if (result.data) {
         // تحديث الattendance المحلي
-        setAttendance(prev => 
-          prev.map(att => 
-            att.id === result.data.id ? result.data : att
-          )
+        setAttendance((prev) =>
+          prev.map((att) => (att.id === result.data.id ? result.data : att))
         );
 
         // مسح من localStorage
@@ -349,9 +368,12 @@ const EmployeePage = () => {
       setIsCheckedIn(false);
       setIsBreak(false);
       toast.success(result.message || "Checked out successfully");
-    } catch (err) {
-      console.error("Check-out error:", err);
-      alert(err instanceof Error ? err.message : "Check-out failed");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message, {
+          style: { background: "#dc2626", color: "#fff" },
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -360,7 +382,9 @@ const EmployeePage = () => {
   // Break function
   const handleBreak = async () => {
     if (!auth?.token) {
-      alert("Please login first");
+      toast.error("Please login first", {
+        style: { background: "#dc2626", color: "#fff" },
+      });
       return;
     }
 
@@ -384,30 +408,31 @@ const EmployeePage = () => {
 
       if (result.data) {
         // تحديث الattendance المحلي
-        setAttendance(prev => 
-          prev.map(att => 
-            att.id === result.data.id ? result.data : att
-          )
+        setAttendance((prev) =>
+          prev.map((att) => (att.id === result.data.id ? result.data : att))
         );
 
         const newBreakState = !isBreak;
-        
+
         // تحديث localStorage
         const savedState = loadEmployeeState();
         if (savedState) {
           saveEmployeeState({
             ...savedState,
             isBreak: newBreakState,
-            currentAttendance: result.data
+            currentAttendance: result.data,
           });
         }
       }
 
       setIsBreak((prev) => !prev);
       toast.success(result.message || "Break status updated");
-    } catch (err) {
-      console.error("Break error:", err);
-      alert(err instanceof Error ? err.message : "Break failed");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message, {
+          style: { background: "#dc2626", color: "#fff" },
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -431,10 +456,10 @@ const EmployeePage = () => {
   // Format date function
   const formatDate = (dateString: string) => {
     if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -470,7 +495,10 @@ const EmployeePage = () => {
             </div>
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold text-gray-800">
-                Welcome back, <span className="text-blue-600">{profile?.name || "Employee"}</span>
+                Welcome back,{" "}
+                <span className="text-blue-600">
+                  {profile?.name || "Employee"}
+                </span>
               </h1>
               <p className="text-gray-600 flex items-center gap-2">
                 <FaClock className="text-blue-500" />
@@ -485,10 +513,10 @@ const EmployeePage = () => {
               <div className="text-sm text-gray-600 mb-1">Current Time</div>
               <div className="text-xl font-bold text-gray-800">
                 {currentTime.toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                  hour12: false
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                  hour12: false,
                 })}
               </div>
             </div>
@@ -516,33 +544,44 @@ const EmployeePage = () => {
               {[
                 { icon: FaEnvelope, label: "Email", value: profile.email },
                 { icon: FaPhone, label: "Phone", value: profile.phone },
-                { icon: FaBriefcase, label: "Position", value: profile.position },
+                {
+                  icon: FaBriefcase,
+                  label: "Position",
+                  value: profile.position,
+                },
                 { icon: FaIdBadge, label: "Job ID", value: profile.jobId },
-                { 
-                  icon: FaUser, 
-                  label: "Role", 
+                {
+                  icon: FaUser,
+                  label: "Role",
                   value: profile.role,
                   badge: true,
-                  color: "blue"
-                }
+                  color: "blue",
+                },
               ].map((item, index) => (
-                <div key={index} className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 hover:border-blue-200 transition-colors duration-200">
+                <div
+                  key={index}
+                  className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 hover:border-blue-200 transition-colors duration-200"
+                >
                   <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm">
                     <item.icon className="text-blue-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{item.label}</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      {item.label}
+                    </p>
                     {item.badge ? (
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200 capitalize">
                         {item.value}
                       </span>
                     ) : (
-                      <p className="font-semibold text-gray-800">{item.value}</p>
+                      <p className="font-semibold text-gray-800">
+                        {item.value}
+                      </p>
                     )}
                   </div>
                 </div>
               ))}
-              
+
               <div className="md:col-span-2 lg:col-span-1">
                 <Link
                   href={"/forgetPassword"}
@@ -566,7 +605,7 @@ const EmployeePage = () => {
             </div>
             Attendance Controls
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Check In Button */}
             <button
@@ -593,7 +632,9 @@ const EmployeePage = () => {
                 <FaCoffee className="text-white" />
               </div>
               <div className="text-left">
-                <div className="text-lg">{isBreak ? "End Break" : "Start Break"}</div>
+                <div className="text-lg">
+                  {isBreak ? "End Break" : "Start Break"}
+                </div>
                 <div className="text-sm opacity-90">Take a break</div>
               </div>
             </button>
@@ -616,14 +657,22 @@ const EmployeePage = () => {
 
           {/* Status Indicators */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className={`p-4 rounded-xl border ${
-              isCheckedIn 
-                ? 'bg-green-50 border-green-200 text-green-800' 
-                : 'bg-gray-50 border-gray-200 text-gray-600'
-            }`}>
+            <div
+              className={`p-4 rounded-xl border ${
+                isCheckedIn
+                  ? "bg-green-50 border-green-200 text-green-800"
+                  : "bg-gray-50 border-gray-200 text-gray-600"
+              }`}
+            >
               <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${isCheckedIn ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                <span className="font-medium">Status: {isCheckedIn ? 'Checked In' : 'Checked Out'}</span>
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    isCheckedIn ? "bg-green-500" : "bg-gray-400"
+                  }`}
+                ></div>
+                <span className="font-medium">
+                  Status: {isCheckedIn ? "Checked In" : "Checked Out"}
+                </span>
               </div>
               {isCheckedIn && (
                 <div className="text-sm mt-2 text-green-700">
@@ -631,14 +680,22 @@ const EmployeePage = () => {
                 </div>
               )}
             </div>
-            <div className={`p-4 rounded-xl border ${
-              isBreak 
-                ? 'bg-orange-50 border-orange-200 text-orange-800' 
-                : 'bg-gray-50 border-gray-200 text-gray-600'
-            }`}>
+            <div
+              className={`p-4 rounded-xl border ${
+                isBreak
+                  ? "bg-orange-50 border-orange-200 text-orange-800"
+                  : "bg-gray-50 border-gray-200 text-gray-600"
+              }`}
+            >
               <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${isBreak ? 'bg-orange-500' : 'bg-gray-400'}`}></div>
-                <span className="font-medium">Break: {isBreak ? 'On Break' : 'Active'}</span>
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    isBreak ? "bg-orange-500" : "bg-gray-400"
+                  }`}
+                ></div>
+                <span className="font-medium">
+                  Break: {isBreak ? "On Break" : "Active"}
+                </span>
               </div>
               {isBreak && (
                 <div className="text-sm mt-2 text-orange-700">
@@ -658,7 +715,9 @@ const EmployeePage = () => {
                   <FaHistory className="text-blue-500" />
                   Attendance Records
                 </h2>
-                <p className="text-gray-600 text-sm">Your recent attendance history</p>
+                <p className="text-gray-600 text-sm">
+                  Your recent attendance history
+                </p>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600 bg-white px-3 py-2 rounded-lg border">
                 <FaClock className="text-blue-500" />
@@ -667,22 +726,37 @@ const EmployeePage = () => {
             </div>
           </div>
 
+          <Toaster position="top-center" reverseOrder={false} />
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50/80 backdrop-blur-sm">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Check In</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Check Out</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Worked Hours</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Break Time</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Check In
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Check Out
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Worked Hours
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Break Time
+                  </th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-gray-200/60">
                 {attendance && attendance.length > 0 ? (
                   attendance.map((att, index) => (
-                    <tr key={att.id || index} className="hover:bg-blue-50/30 transition-colors duration-150 group">
+                    <tr
+                      key={att.id || index}
+                      className="hover:bg-blue-50/30 transition-colors duration-150 group"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
@@ -690,7 +764,7 @@ const EmployeePage = () => {
                           </div>
                           <div>
                             <div className="font-semibold text-gray-900">
-                              {att.date ? formatDate(att.date) : 'No date'}
+                              {att.date ? formatDate(att.date) : "No date"}
                             </div>
                           </div>
                         </div>
@@ -720,7 +794,7 @@ const EmployeePage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         {att.totalWorkedHours ? (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
-                            {Number(att.totalWorkedHours).toFixed(2) + 'h'}
+                            {Number(att.totalWorkedHours).toFixed(2) + "h"}
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
@@ -731,7 +805,7 @@ const EmployeePage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         {att.totalBreakMinutes ? (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800 border border-orange-200">
-                            {Number(att.totalBreakMinutes).toFixed(0) + 'm'}
+                            {Number(att.totalBreakMinutes).toFixed(0) + "m"}
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
@@ -748,9 +822,13 @@ const EmployeePage = () => {
                         <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
                           <FaHistory className="text-gray-600 text-2xl" />
                         </div>
-                        <h3 className="text-xl font-semibold text-gray-700 mb-2">No attendance records found</h3>
+                        <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                          No attendance records found
+                        </h3>
                         <p className="text-gray-500 mb-4 text-center">
-                          {loading ? 'Loading attendance data...' : 'Start your day by checking in above to see your attendance history here.'}
+                          {loading
+                            ? "Loading attendance data..."
+                            : "Start your day by checking in above to see your attendance history here."}
                         </p>
                         {!loading && (
                           <button
