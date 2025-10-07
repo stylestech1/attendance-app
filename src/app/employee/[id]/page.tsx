@@ -114,7 +114,7 @@ const EmployeePage = () => {
       if (savedState.currentAttendance) {
         setAttendance(prev => {
           const exists = prev.some(att => att.id === savedState.currentAttendance?.id);
-          if (!exists) {
+          if (!exists && savedState.currentAttendance) {
             return [savedState.currentAttendance, ...prev];
           }
           return prev;
@@ -720,10 +720,7 @@ const EmployeePage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         {att.totalWorkedHours ? (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
-                            {typeof att.totalWorkedHours === 'number' 
-                              ? att.totalWorkedHours.toFixed(2) + 'h'
-                              : Number(att.totalWorkedHours).toFixed(2) + 'h'
-                            }
+                            {Number(att.totalWorkedHours).toFixed(2) + 'h'}
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
@@ -734,10 +731,7 @@ const EmployeePage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         {att.totalBreakMinutes ? (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800 border border-orange-200">
-                            {typeof att.totalBreakMinutes === 'number'
-                              ? att.totalBreakMinutes.toFixed(0) + 'm'
-                              : Number(att.totalBreakMinutes).toFixed(0) + 'm'
-                            }
+                            {Number(att.totalBreakMinutes).toFixed(0) + 'm'}
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
