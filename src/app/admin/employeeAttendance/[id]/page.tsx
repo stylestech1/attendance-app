@@ -4,6 +4,23 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Loading from "@/components/ui/Loading";
 import Link from "next/link";
+import { 
+  FaSignOutAlt, 
+  FaUser, 
+  FaEnvelope, 
+  FaPhone, 
+  FaBriefcase, 
+  FaIdBadge, 
+  FaUserShield, 
+  FaUserCheck, 
+  FaUserTimes, 
+  FaCalendarAlt,
+  FaClock,
+  FaHistory,
+  FaChartBar,
+  FaArrowLeft,
+  FaEye
+} from "react-icons/fa";
 
 // Types
 type TProfile = {
@@ -69,7 +86,6 @@ const EmployeeAttendance = () => {
         const result = await res.json();
         if (res.ok) {
           setProfile(result.data);
-          // console.log(userId)
         } else {
           alert(result.message);
         }
@@ -206,190 +222,273 @@ const EmployeeAttendance = () => {
   if (loading) return <Loading />;
 
   return (
-    <section className="container mx-auto my-20">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col items-start gap-2">
-          {profile && (
-            <h1 className="text-3xl">
-              👀 Preview{" "}
-              <span className="font-bold">{profile.name.split(" ")[0]}</span>{" "}
-              Attendance
-            </h1>
-          )}
-          <button
-            onClick={toggleRole}
-            disabled={loading}
-            className="cursor-pointer px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
-          >
-            {loading
-              ? "Updating..."
-              : `Make ${profile?.role === "admin" ? "Employee" : "Admin"}`}
-          </button>
-        </div>
-
-        <div className="flex gap-4 my-5">
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">From:</label>
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="px-3 py-2 border rounded-md"
-            />
+    <section className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 p-4 lg:p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <FaEye className="text-white text-xl" />
+            </div>
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-800">
+                Viewing {`${profile?.name.split(" ")[0]}'s`} Attendance
+              </h1>
+              <p className="text-gray-600 flex items-center gap-2">
+                <FaUser className="text-blue-500" />
+                Employee Attendance Details
+              </p>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">To:</label>
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="px-3 py-2 border rounded-md"
-            />
-          </div>
-        </div>
 
-        <div className="flex items-center gap-5">
-          <button
-            onClick={toggleActive}
-            className={`cursor-pointer px-4 py-2 rounded-md text-white transition-colors w-fit ${
-              profile?.active
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-green-600 hover:bg-green-700"
-            }`}
-          >
-            {profile?.active ? "Deactivate" : "Activate"}
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            {/* Date Filters */}
+            <div className="flex gap-3">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <FaCalendarAlt className="text-blue-500 text-xs" />
+                  From
+                </label>
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <FaCalendarAlt className="text-blue-500 text-xs" />
+                  To
+                </label>
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm"
+                />
+              </div>
+            </div>
 
-          <button
-            onClick={handleLogout}
-            className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors w-fit"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
+            <div className="flex gap-3">
+              <button
+                onClick={toggleRole}
+                disabled={loading}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50"
+              >
+                <FaUserShield size={16} />
+                {loading ? "Updating..." : `Make ${profile?.role === "admin" ? "Employee" : "Admin"}`}
+              </button>
 
-      {/* Profile Information */}
-      {profile && (
-        <div className="my-10 p-4 bg-gray-50 rounded-lg border w-full">
-          <h2 className="text-lg font-semibold mb-3 text-gray-800">
-            Profile Information
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-            <div className="flex gap-x-2">
-              <span className="font-medium text-gray-600">Name:</span>
-              <span className="text-gray-800">{profile.name}</span>
-            </div>
-            <div className="flex gap-x-2">
-              <span className="font-medium text-gray-600">Email:</span>
-              <span className="text-gray-800">{profile.email}</span>
-            </div>
-            <div className="flex gap-x-2">
-              <span className="font-medium text-gray-600">Phone:</span>
-              <span className="text-gray-800">{profile.phone}</span>
-            </div>
-            <div className="flex gap-x-2">
-              <span className="font-medium text-gray-600">Role:</span>
-              <span className="text-gray-800 capitalize">{profile.role}</span>
-            </div>
-            <div className="flex gap-x-2">
-              <span className="font-medium text-gray-600">Position:</span>
-              <span className="text-gray-800">{profile.position}</span>
-            </div>
-            <div className="flex gap-x-2">
-              <span className="font-medium text-gray-600">Job-ID:</span>
-              <span className="text-gray-800">{profile.jobId}</span>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-slate-600 to-gray-700 hover:from-slate-700 hover:to-gray-800 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+              >
+                <FaSignOutAlt size={16} />
+                Logout
+              </button>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Attendance Table */}
-      <div className="my-10">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold mb-3 text-gray-800">
-            Attendance Records
-          </h2>
+        {/* Profile Information */}
+        {profile && (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-8 hover:shadow-xl transition-shadow duration-300">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                  <FaUser className="text-white text-sm" />
+                </div>
+                Profile Information
+              </h2>
+              
+              <button
+                onClick={toggleActive}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 ${
+                  profile?.active
+                    ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+                    : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                }`}
+              >
+                {profile?.active ? <FaUserTimes size={16} /> : <FaUserCheck size={16} />}
+                {profile?.active ? "Deactivate" : "Activate"}
+              </button>
+            </div>
 
-          <Link
-            href={`/admin/summary/${userId}`}
-            className="py-2 px-10 bg-blue-700 text-white rounded-md cursor-pointer"
-          >
-            View Summary
-          </Link>
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { icon: FaUser, label: "Name", value: profile.name },
+                { icon: FaEnvelope, label: "Email", value: profile.email },
+                { icon: FaPhone, label: "Phone", value: profile.phone },
+                { icon: FaBriefcase, label: "Position", value: profile.position },
+                { icon: FaIdBadge, label: "Job ID", value: profile.jobId },
+                { 
+                  icon: FaUserShield, 
+                  label: "Role", 
+                  value: profile.role,
+                  badge: true,
+                  color: profile.role === "admin" ? "purple" : "blue"
+                }
+              ].map((item, index) => (
+                <div key={index} className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 hover:border-blue-200 transition-colors duration-200">
+                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                    <item.icon className={`text-${item.color || 'blue'}-600`} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{item.label}</p>
+                    {item.badge ? (
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-${item.color}-100 text-${item.color}-800 border border-${item.color}-200 capitalize`}>
+                        {item.value}
+                      </span>
+                    ) : (
+                      <p className="font-semibold text-gray-800">{item.value}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-        <table className="w-full border-collapse border border-gray-300 my-5">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="border p-2">Date</th>
-              <th className="border p-2">Check In</th>
-              <th className="border p-2">Check Out</th>
-              <th className="border p-2">Worked Hours</th>
-              <th className="border p-2">Break (mins)</th>
-            </tr>
-          </thead>
-          <tbody className="text-center">
-            {attendance.length > 0 ? (
-              attendance.map((record, i) => (
-                <tr key={i}>
-                  <td className="border p-2">
-                    {new Date(record.date).toLocaleDateString()}
-                  </td>
-                  <td className="border p-2">
-                    {record.checkInAt
-                      ? new Date(record.checkInAt).toLocaleTimeString()
-                      : "--"}
-                  </td>
-                  <td className="border p-2">
-                    {record.checkOutAt
-                      ? new Date(record.checkOutAt).toLocaleTimeString()
-                      : "--"}
-                  </td>
-                  <td className="border p-2">
-                    {record.totalWorkedHours.toFixed(2)}
-                  </td>
-                  <td className="border p-2">
-                    {record.totalBreakMinutes.toFixed(2)}
-                  </td>
+        {/* Attendance Records */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300">
+          <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-blue-50">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
+                  <FaHistory className="text-blue-500" />
+                  Attendance Records
+                </h2>
+                <p className="text-gray-600 text-sm">Detailed attendance history and time tracking</p>
+              </div>
+              
+              <Link
+                href={`/admin/summary/${userId}`}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+              >
+                <FaChartBar size={16} />
+                View Summary
+              </Link>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50/80 backdrop-blur-sm">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Check In</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Check Out</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Worked Hours</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Break Time</th>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                  No attendance records found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
 
-      {/* Pagination */}
-      {pagination && (
-        <div className="flex justify-end items-center gap-5 mt-5">
-          <button
-            disabled={page <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-          <span>
-            Page {pagination.currentPage} of {pagination.totalPages}
-          </span>
-          <button
-            disabled={page >= pagination.totalPages}
-            onClick={() =>
-              setPage((p) => Math.min(pagination.totalPages, p + 1))
-            }
-            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-          >
-            Next
-          </button>
+              <tbody className="divide-y divide-gray-200/60">
+                {attendance.length > 0 ? (
+                  attendance.map((record, i) => (
+                    <tr key={i} className="hover:bg-blue-50/30 transition-colors duration-150 group">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                            <FaCalendarAlt className="text-white text-sm" />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900">
+                              {new Date(record.date).toLocaleDateString('en-US', { 
+                                weekday: 'short',
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {record.checkInAt ? (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+                            <FaClock className="mr-1" size={12} />
+                            {new Date(record.checkInAt).toLocaleTimeString()}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                            --
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {record.checkOutAt ? (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                            <FaClock className="mr-1" size={12} />
+                            {new Date(record.checkOutAt).toLocaleTimeString()}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                            --
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                          {record.totalWorkedHours.toFixed(2)}h
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                          {record.totalBreakMinutes.toFixed(0)}m
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-16 text-center">
+                      <div className="flex flex-col items-center justify-center max-w-md mx-auto">
+                        <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
+                          <FaHistory className="text-gray-600 text-2xl" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-700 mb-2">No attendance records</h3>
+                        <p className="text-gray-500 mb-4 text-center">
+                          {fromDate || toDate 
+                            ? 'No attendance records found for the selected date range.' 
+                            : 'No attendance records available for this employee.'
+                          }
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      )}
+
+        {/* Pagination */}
+        {pagination && attendance.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 p-6 bg-white rounded-2xl shadow-lg border border-gray-200">
+            <div className="text-sm text-gray-600">
+              Showing page <span className="font-semibold">{pagination.currentPage}</span> of <span className="font-semibold">{pagination.totalPages}</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-medium transition-all duration-200 hover:shadow-md"
+              >
+                Previous
+              </button>
+              <button
+                disabled={page >= pagination.totalPages}
+                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all duration-200 hover:shadow-md"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </section>
   );
 };

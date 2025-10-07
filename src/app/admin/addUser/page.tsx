@@ -4,7 +4,7 @@ import Loading from "@/components/ui/Loading";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { FaEyeSlash, FaEye } from "react-icons/fa";
+import { FaEyeSlash, FaEye, FaUserPlus, FaSignOutAlt, FaUser, FaEnvelope, FaPhone, FaLock, FaBriefcase, FaCalendar, FaUserShield } from "react-icons/fa";
 
 const AddUser = () => {
   const { auth, logout } = useAuth();
@@ -82,166 +82,304 @@ const AddUser = () => {
   const handleLogout = () => {
     logout();
   };
+
   // set Loading
   if (loading) return <Loading />;
 
   return (
-    <section className="container mx-auto my-20">
-      {/* Title */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-4xl font-bold">Admin Dashboard</h1>
+    <section className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 p-4 lg:p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <FaUserPlus className="text-white text-xl" />
+            </div>
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-800">
+                Add New User
+              </h1>
+              <p className="text-gray-600 flex items-center gap-2">
+                <FaUser className="text-blue-500" />
+                Admin Dashboard
+              </p>
+            </div>
+          </div>
 
-        <button
-          onClick={handleLogout}
-          className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors w-fit"
-        >
-          Logout
-        </button>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-slate-600 to-gray-700 hover:from-slate-700 hover:to-gray-800 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+          >
+            <FaSignOutAlt size={16} />
+            Logout
+          </button>
+        </div>
+
+        {/* Form Card */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300">
+          {/* Form Header */}
+          <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                <FaUserPlus className="text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">Create New User Account</h2>
+                <p className="text-gray-600 text-sm">Fill in the details to add a new team member</p>
+              </div>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-6 lg:p-8">
+            {err && (
+              <div className="mb-6">
+                <AlertError>{err}</AlertError>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Personal Information */}
+              <div className="lg:col-span-2">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <FaUser className="text-blue-500" />
+                  Personal Information
+                </h3>
+              </div>
+
+              {/* Full Name */}
+              <div className="space-y-2">
+                <label htmlFor="name" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <FaUser className="text-blue-500 text-xs" />
+                  Full Name
+                </label>
+                <div className="relative">
+                  <input
+                    value={form.name}
+                    onChange={handleChange}
+                    type="text"
+                    id="name"
+                    required
+                    placeholder="Enter full name"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaUser className="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <FaEnvelope className="text-blue-500 text-xs" />
+                  Email Address
+                </label>
+                <div className="relative">
+                  <input
+                    value={form.email}
+                    onChange={handleChange}
+                    type="email"
+                    id="email"
+                    required
+                    placeholder="Enter email address"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaEnvelope className="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div className="space-y-2">
+                <label htmlFor="phone" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <FaPhone className="text-blue-500 text-xs" />
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <input
+                    value={form.phone}
+                    onChange={handleChange}
+                    type="tel"
+                    id="phone"
+                    required
+                    placeholder="Enter phone number"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaPhone className="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Position */}
+              <div className="space-y-2">
+                <label htmlFor="position" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <FaBriefcase className="text-blue-500 text-xs" />
+                  Position
+                </label>
+                <div className="relative">
+                  <input
+                    value={form.position}
+                    onChange={handleChange}
+                    type="text"
+                    id="position"
+                    required
+                    placeholder="Enter position"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaBriefcase className="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Security Section */}
+              <div className="lg:col-span-2 mt-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <FaLock className="text-green-500" />
+                  Security & Access
+                </h3>
+              </div>
+
+              {/* Password */}
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <FaLock className="text-green-500 text-xs" />
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    value={form.password}
+                    onChange={handleChange}
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    required
+                    placeholder="Enter new password"
+                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaLock className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Password */}
+              <div className="space-y-2">
+                <label htmlFor="passwordConfirmation" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <FaLock className="text-green-500 text-xs" />
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <input
+                    value={form.passwordConfirmation}
+                    onChange={handleChange}
+                    type={showPasswordConfirm ? "text" : "password"}
+                    id="passwordConfirmation"
+                    required
+                    placeholder="Confirm password"
+                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaLock className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordConfirm((prev) => !prev)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showPasswordConfirm ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Employment Details */}
+              <div className="lg:col-span-2 mt-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <FaCalendar className="text-purple-500" />
+                  Employment Details
+                </h3>
+              </div>
+
+              {/* Hiring Date */}
+              <div className="space-y-2">
+                <label htmlFor="hiringDate" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <FaCalendar className="text-purple-500 text-xs" />
+                  Hiring Date
+                </label>
+                <div className="relative">
+                  <input
+                    value={form.hiringDate}
+                    onChange={handleChange}
+                    type="date"
+                    id="hiringDate"
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaCalendar className="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Role */}
+              <div className="space-y-2">
+                <label htmlFor="role" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <FaUserShield className="text-purple-500 text-xs" />
+                  Role
+                </label>
+                <div className="relative">
+                  <select
+                    value={form.role}
+                    onChange={handleChange}
+                    id="role"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm appearance-none cursor-pointer"
+                  >
+                    <option value="employee">Employee</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaUserShield className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-4 px-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Creating User...
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2">
+                    <FaUserPlus size={16} />
+                    Create User Account
+                  </div>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-
-      {/* Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="mx-auto border border-gray-400 rounded-lg py-10 px-5 my-10 w-200 shadow"
-      >
-        <div className="flex flex-col items-center gap-1 mb-10">
-          <span className="text-4xl wave">🎉</span>
-          <h2 className="text-3xl font-bold text-blue-800 text-center">
-            Create New User
-          </h2>
-        </div>
-
-        {err && <AlertError>{err}</AlertError>}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 my-5">
-          <div className="flex flex-col gap-2 mb-4">
-            <label htmlFor="name">Full Name</label>
-            <input
-              value={form.name}
-              onChange={handleChange}
-              type="text"
-              id="name"
-              required
-              placeholder="Full Name"
-              className="px-5 py-3 rounded-md border border-gray-400"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2 mb-4">
-            <label htmlFor="email">Email</label>
-            <input
-              value={form.email}
-              onChange={handleChange}
-              type="email"
-              id="email"
-              required
-              placeholder="Email Address"
-              className="px-5 py-3 rounded-md border border-gray-400"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2 mb-4">
-            <label htmlFor="phone">Phone</label>
-            <input
-              value={form.phone}
-              onChange={handleChange}
-              type="tel"
-              id="phone"
-              required
-              placeholder="Phone Number"
-              className="px-5 py-3 rounded-md border border-gray-400"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2 mb-4 relative">
-            <label htmlFor="password">Password</label>
-            <input
-              value={form.password}
-              onChange={handleChange}
-              type={showPassword ? "text" : "password"}
-              id="password"
-              required
-              placeholder="Enter new password"
-              className="px-5 py-3 rounded-md border border-gray-400"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-11.5 text-gray-600 cursor-pointer"
-            >
-              {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-2 mb-4 relative">
-            <label htmlFor="passwordConfirmation">Confirm Password</label>
-            <input
-              value={form.passwordConfirmation}
-              onChange={handleChange}
-              type={showPasswordConfirm ? "text" : "password"}
-              id="passwordConfirmation"
-              required
-              placeholder="Confirm password"
-              className="px-5 py-3 rounded-md border border-gray-400"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPasswordConfirm((prev) => !prev)}
-              className="absolute right-3 top-11.5 text-gray-600 cursor-pointer"
-            >
-              {showPasswordConfirm ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-2 mb-4">
-            <label htmlFor="position">Position</label>
-            <input
-              value={form.position}
-              onChange={handleChange}
-              type="text"
-              id="position"
-              required
-              placeholder="Position"
-              className="px-5 py-3 rounded-md border border-gray-400"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2 mb-4">
-            <label htmlFor="hiringDate">Hiring Date</label>
-            <input
-              value={form.hiringDate}
-              onChange={handleChange}
-              type="date"
-              id="hiringDate"
-              required
-              placeholder="Hiring Date"
-              className="px-5 py-3 rounded-md border border-gray-400"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2 mb-4">
-            <label htmlFor="role">Role</label>
-
-            <select
-              value={form.role}
-              onChange={handleChange}
-              id="role"
-              className="px-5 py-3 rounded-md border border-gray-400 cursor-pointer"
-            >
-              <option value="employee">Employee</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="cursor-pointer w-full py-3 mt-5 rounded-lg bg-green-700 hover:bg-green-800 transition-colors text-white"
-        >
-          {loading ? "loading..." : "Create"}
-        </button>
-      </form>
     </section>
   );
 };
