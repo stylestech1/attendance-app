@@ -19,6 +19,9 @@ import {
   FaHistory,
   FaChartBar,
   FaEye,
+  FaTimes,
+  FaTimesCircle,
+  FaRegClock,
 } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -32,6 +35,7 @@ type TProfile = {
   phone: string;
   role: string;
   active: boolean;
+  hireDate: string
 };
 type TAttendance = {
   id: string;
@@ -354,6 +358,11 @@ const EmployeeAttendance = () => {
                   value: profile.role,
                   badge: true,
                   color: profile.role === "admin" ? "purple" : "blue",
+                },
+                {
+                  icon: FaRegClock,
+                  label: "Hiring Date",
+                  value: profile.hireDate.split('T')[0],
                 },
               ].map((item, index) => (
                 <div
