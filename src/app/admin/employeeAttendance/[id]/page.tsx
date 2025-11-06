@@ -35,7 +35,7 @@ type TProfile = {
   phone: string;
   role: string;
   active: boolean;
-  hireDate: string
+  hireDate: string;
 };
 type TAttendance = {
   id: string;
@@ -362,7 +362,7 @@ const EmployeeAttendance = () => {
                 {
                   icon: FaRegClock,
                   label: "Hiring Date",
-                  value: profile.hireDate.split('T')[0],
+                  value: profile.hireDate.split("T")[0],
                 },
               ].map((item, index) => (
                 <div
@@ -454,15 +454,12 @@ const EmployeeAttendance = () => {
                           </div>
                           <div>
                             <div className="font-semibold text-gray-900">
-                              {new Date(record.date).toLocaleDateString(
-                                "en-US",
-                                {
-                                  weekday: "short",
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                }
-                              )}
+                              {new Date().toLocaleDateString("en-US", {
+                                weekday: "short",
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })}
                             </div>
                           </div>
                         </div>
@@ -471,7 +468,12 @@ const EmployeeAttendance = () => {
                         {record.checkInAt ? (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
                             <FaClock className="mr-1" size={12} />
-                            {new Date(record.checkInAt).toLocaleTimeString()}
+                            {new Date(record.checkInAt).toLocaleTimeString(
+                              "en-US",
+                              {
+                                timeZone: "Africa/Cairo",
+                              }
+                            )}
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
@@ -483,7 +485,12 @@ const EmployeeAttendance = () => {
                         {record.checkOutAt ? (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
                             <FaClock className="mr-1" size={12} />
-                            {new Date(record.checkOutAt).toLocaleTimeString()}
+                            {new Date(record.checkOutAt).toLocaleTimeString(
+                              "en-US",
+                              {
+                                timeZone: "Africa/Cairo",
+                              }
+                            )}
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
