@@ -454,12 +454,7 @@ const EmployeeAttendance = () => {
                           </div>
                           <div>
                             <div className="font-semibold text-gray-900">
-                              {new Date().toLocaleDateString("en-US", {
-                                weekday: "short",
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                              })}
+                              {record.date.split('T')[0]}
                             </div>
                           </div>
                         </div>
