@@ -1,0 +1,36 @@
+export type UserMini = {
+  id: string;
+  name?: string;
+};
+
+export type Conversation = {
+  id: string;
+  members: UserMini[];
+  lastMessage?: {
+    text?: string;
+    sender?: UserMini | null;
+    createdAt?: string;
+    seen?: boolean;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Message = {
+  id: string;
+  conversationId: string;
+  text: string;
+  sender: UserMini;
+  seen: boolean;
+  createdAt: string;
+};
+
+export type ApiResponse<T> = {
+  message: string;
+  results?: number;
+  data: T;
+};
+
+export type MarkSeenResponse = {
+  message: string;
+};

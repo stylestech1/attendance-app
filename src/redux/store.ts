@@ -1,0 +1,21 @@
+"use client";
+import { configureStore } from "@reduxjs/toolkit";
+import { useDispatch, useSelector } from "react-redux";
+import chatSlice from "./features/chatSlice";
+import authSlice from "./features/authSlice";
+import { chatApi } from "./api/chatApi";
+
+export const store = configureStore({
+  reducer: {
+    chat: chatSlice,
+    auth: authSlice,
+    [chatApi.reducerPath]: chatApi.reducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(chatApi.middleware),
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+export const useAppSelector = useSelector.withTypes<RootState>();
+export const useAppDispatch = useDispatch.withTypes<AppDispatch>();

@@ -1,6 +1,14 @@
 "use client";
-import { useContext, createContext, useState, useEffect, ReactNode } from "react";
+import {
+  useContext,
+  createContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { setToken } from "@/redux/features/authSlice";
 
 // Types
 type Role = "admin" | "employee" | null;
@@ -12,10 +20,14 @@ type AuthState = {
 };
 
 type AuthContextType = {
-  id?: string | null
+  id?: string | null;
   auth: AuthState;
   loading: boolean;
-  login: (payload: { token: string; role: Exclude<Role, null>; id?: string | null }) => void;
+  login: (payload: {
+    token: string;
+    role: Exclude<Role, null>;
+    id?: string | null;
+  }) => void;
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
@@ -33,6 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     role: null,
     id: null,
   });
+  const dispatch = useDispatch();
 
   const TOKEN_KEY = "employeeSystem_auth_token";
 
@@ -53,6 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           role: parsed.role || null,
           id: parsed.id || null,
         });
+        dispatch(setToken(parsed.token));
       } else {
         localStorage.removeItem(TOKEN_KEY);
       }
@@ -63,10 +77,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const login = ({ token, role, id }: { token: string; role: Exclude<Role, null>; id?: string | null }) => {
+  const login = ({
+    token,
+    role,
+    id,
+  }: {
+    token: string;
+    role: Exclude<Role, null>;
+    id?: string | null;
+  }) => {
     const payload = { token, role, id: id ?? null };
     localStorage.setItem(TOKEN_KEY, JSON.stringify(payload));
     setAuth(payload);
+    dispatch(setToken(token));
 
     if (role === "admin") {
       router.push("/admin");
@@ -83,6 +106,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem(TOKEN_KEY);
     setAuth({ token: null, role: null, id: null });
     router.push("/login");
+    dispatch(setToken(null));
   };
 
   return (
@@ -95,7 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated: !!auth.token,
         isAdmin: auth.role === "admin",
         isEmployee: auth.role === "employee",
-        authLoading: false
+        authLoading: false,
       }}
     >
       {children}
