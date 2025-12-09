@@ -1,6 +1,7 @@
 // services/socketService.ts
 import { Conversation } from "@/types/chat";
 import { io, Socket } from "socket.io-client";
+import { SOCKET_EVENTS } from "@/constants/socketEvents";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -9,10 +10,12 @@ class SocketServiceClass {
   private token: string | null = null;
   private listeners: Map<string, ((...args: Conversation[]) => void)[]> =
     new Map();
+  private listenersRegistered = false;
 
   initialize(token: string) {
-    if (this.socket?.connected) {
+    if (this.socket) {
       console.log("📡 Socket already connected");
+      this.setupEventListeners();
       return this.socket;
     }
 
@@ -24,12 +27,6 @@ class SocketServiceClass {
       auth: { token },
       transports: ["websocket"],
       reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 10000,
-      forceNew: false,
-      autoConnect: true,
       withCredentials: true,
       query: { token },
     });
@@ -40,7 +37,9 @@ class SocketServiceClass {
   }
 
   private setupEventListeners() {
-    if (!this.socket) return;
+    if (!this.socket || this.listenersRegistered) return;
+
+    this.listenersRegistered = true;
 
     this.socket.on("connect", () => {
       console.log("✅ Socket connected successfully. ID:", this.socket?.id);
@@ -70,21 +69,21 @@ class SocketServiceClass {
     });
 
     // Listen for specific chat events
-    this.socket.on("newMessage", (data) => {
+    this.socket.on(SOCKET_EVENTS.NEW_MESSAGE, (data) => {
       console.log("📨 Received newMessage event:", data);
     });
 
-    this.socket.on("typing", (data) => {
+    this.socket.on(SOCKET_EVENTS.TYPING, (data) => {
       console.log("✍️ Received typing event:", data);
     });
 
-    this.socket.on("stopTyping", (data) => {
+    this.socket.on(SOCKET_EVENTS.STOP_TYPING, (data) => {
       console.log("🤚 Received stopTyping event:", data);
     });
   }
 
   // Emit events
-  emit(event: string, data: Conversation) {
+  emit<T = Conversation>(event: string, data: T) {
     if (!this.socket?.connected) {
       console.error("⚠️ Cannot emit", event, "- Socket not connected");
       return false;

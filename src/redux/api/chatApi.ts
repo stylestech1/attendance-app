@@ -5,19 +5,26 @@ import {
   Message,
 } from "@/types/chat";
 import { api } from "./baseApi";
+import { TUser } from "@/types/user";
 
 export const chatApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    // 1️⃣ Get User Conversations
+    // Get All User in System
+    getAllUser: builder.query<TUser[], void>({
+      query: () => `/api/v1/adminDashboard`,
+      transformResponse: (response: ApiResponse<TUser[]>) => response.data,
+      providesTags: ["Users"],
+    }),
+
+    // Get User Conversations
     getUserConversations: builder.query<Conversation[], void>({
       query: () => `/api/v1/chat/conversations`,
-      transformResponse: (response: ApiResponse<Conversation[]>) => {
-        return response.data || [];
-      },
+      transformResponse: (response: ApiResponse<Conversation[]>) =>
+        response.data || [],
       providesTags: ["Conversations"],
     }),
 
-    // 2️⃣ Create Or Get User Conversations
+    // Create Or Get Conversation
     createOrGetConversation: builder.mutation<Conversation, { userId: string }>(
       {
         query: (body) => ({
@@ -25,14 +32,13 @@ export const chatApi = api.injectEndpoints({
           method: "POST",
           body,
         }),
-        transformResponse: (response: ApiResponse<Conversation>) => {
-          return response.data;
-        },
+        transformResponse: (response: ApiResponse<Conversation>) =>
+          response.data,
         invalidatesTags: ["Conversations"],
       }
     ),
 
-    // 3️⃣ Send Messages
+    // Send Message
     addMessage: builder.mutation<
       Message,
       { conversationId: string; text: string }
@@ -42,25 +48,22 @@ export const chatApi = api.injectEndpoints({
         method: "POST",
         body: { text },
       }),
-      transformResponse: (response: ApiResponse<Message>) => {
-        return response.data;
-      },
+      transformResponse: (response: ApiResponse<Message>) => response.data,
       invalidatesTags: (_res, _err, arg) => [
         { type: "Messages", id: arg.conversationId },
         "Conversations",
       ],
     }),
 
-    // 4️⃣ Get Conversation
+    // Get Conversation Messages
     getConversationMessages: builder.query<Message[], string>({
       query: (conversationId) => `/api/v1/chat/messages/${conversationId}`,
-      transformResponse: (response: ApiResponse<Message[]>) => {
-        return response.data || [];
-      },
+      transformResponse: (response: ApiResponse<Message[]>) =>
+        response.data || [],
       providesTags: (_res, _err, id) => [{ type: "Messages", id }],
     }),
 
-    // 5️⃣ Mark as Seen
+    // Mark Messages Seen
     markMessagesSeen: builder.mutation<
       MarkSeenResponse,
       { conversationId: string }
@@ -69,9 +72,7 @@ export const chatApi = api.injectEndpoints({
         url: `/api/v1/chat/messages/seen/${conversationId}`,
         method: "PUT",
       }),
-      transformResponse: (response: MarkSeenResponse) => {
-        return response;
-      },
+      transformResponse: (response: MarkSeenResponse) => response,
       invalidatesTags: (_res, _err, arg) => [
         { type: "Messages", id: arg.conversationId },
         "Conversations",
@@ -81,6 +82,7 @@ export const chatApi = api.injectEndpoints({
 });
 
 export const {
+  useGetAllUserQuery,
   useGetUserConversationsQuery,
   useCreateOrGetConversationMutation,
   useAddMessageMutation,

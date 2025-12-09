@@ -6,36 +6,46 @@ import ChatInput from "@/components/chat/ChatInput";
 import { useGetUserConversationsQuery } from "@/redux/api/chatApi";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
 import { setSelectedConversation } from "@/redux/features/chatSlice";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import SocketStatus from "@/components/chat/SocketStatus";
+import { useChatSocket } from "@/services/useChatSocket";
 
 export default function ChatPage() {
   const { isAuthenticated, loading: authLoading, auth } = useAuth();
   const dispatch = useAppDispatch();
-  
-  const { 
-    data: conversations = [], 
-    isLoading, 
+  const { isInitialized, joinConversation } = useChatSocket();
+
+  const {
+    data: conversations = [],
+    isLoading,
     error,
-    refetch 
-  } = useGetUserConversationsQuery(undefined, {
-    skip: !isAuthenticated,
-  });
+    refetch,
+  } = useGetUserConversationsQuery(undefined, { skip: !isAuthenticated });
 
-  console.log('conversations ==', conversations)
-  
-  const selectedConvId = useAppSelector((state) => state.chat.selectedConversationId);
+  const selectedConvId = useAppSelector(
+    (state) => state.chat.selectedConversationId
+  );
 
-  // Refetch on mount
+  // Refetch on mount or login
   useEffect(() => {
-    if (isAuthenticated) {
-      console.log("Refetching conversations...");
-      refetch();
-    }
+    if (isAuthenticated) refetch();
   }, [isAuthenticated, refetch]);
 
-  const selectedConversation = conversations.find(conv => conv.id === selectedConvId);
+  // Join selected conversation room
+  const prevConvId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!selectedConvId || selectedConvId === prevConvId.current) return;
+    if (isInitialized.current) {
+      joinConversation(selectedConvId);
+      prevConvId.current = selectedConvId;
+    }
+  }, [selectedConvId, joinConversation, isInitialized]);
 
+  const selectedConversation = conversations.find(
+    (conv) => conv.id === selectedConvId
+  );
+
+  // ------------------ LOADING & AUTH STATES ------------------
   if (authLoading || isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -53,13 +63,12 @@ export default function ChatPage() {
   }
 
   if (error) {
-    console.error("Chat Error:", error);
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex flex-col items-center justify-center h-screen">
         <div className="text-lg text-red-500">
           Error loading conversations. Please try again.
         </div>
-        <button 
+        <button
           onClick={() => refetch()}
           className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
         >
@@ -69,18 +78,17 @@ export default function ChatPage() {
     );
   }
 
+  // ------------------ RENDER CHAT UI ------------------
   return (
     <div className="flex h-screen bg-gray-50">
       <SocketStatus />
+
       {/* Sidebar */}
       <div className="w-1/4 border-r bg-white">
-        <ChatSidebar 
-          conversations={conversations} 
+        <ChatSidebar
+          conversations={conversations}
           selectedConvId={selectedConvId}
-          onSelectConversation={(id) => {
-            console.log("Selecting conversation:", id);
-            dispatch(setSelectedConversation(id));
-          }}
+          onSelectConversation={(id) => dispatch(setSelectedConversation(id))}
         />
       </div>
 
@@ -93,14 +101,10 @@ export default function ChatPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="font-semibold">
-                    {selectedConversation.members
-                      ?.map(member => member.name || "Unknown")
-                      .filter(Boolean)
-                      .join(", ")}
+                    {selectedConversation.members.find(
+                      (m) => m.id !== auth.id
+                    )?.name || "Unknown"}{" "}
                   </h2>
-                  <p className="text-sm text-gray-500">
-                    {selectedConversation.members?.length || 0} participants
-                  </p>
                 </div>
               </div>
             </div>
@@ -119,8 +123,8 @@ export default function ChatPage() {
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <h3 className="text-xl font-medium text-gray-600">
-                {conversations.length === 0 
-                  ? "No conversations yet" 
+                {conversations.length === 0
+                  ? "No conversations yet"
                   : "Select a conversation"}
               </h3>
               <p className="text-gray-500">
@@ -131,12 +135,9 @@ export default function ChatPage() {
               {conversations.length > 0 && (
                 <button
                   onClick={() => {
-                    // Select first conversation
                     const firstConv = conversations[0];
-                    if (firstConv) {
-                      console.log("Auto-selecting first conversation:", firstConv.id);
+                    if (firstConv)
                       dispatch(setSelectedConversation(firstConv.id));
-                    }
                   }}
                   className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
                 >

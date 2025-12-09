@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useGetConversationMessagesQuery } from "@/redux/api/chatApi";
 import { useAppSelector } from "@/redux/store";
@@ -33,14 +33,36 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
     refetch,
     error,
   } = useGetConversationMessagesQuery(conversationId, {
-    skip: liveMessages.length > 0,
     refetchOnMountOrArgChange: true,
+    skip: liveMessages.length > 0,
   });
 
   useMarkMessagesSeen(conversationId);
 
-  const allMessages = liveMessages.length > 0 ? liveMessages : apiMessages
+  // ✅ Merge messages: backend + live, remove duplicates
+  const allMessages = useMemo(() => {
+    const merged = [...apiMessages];
 
+    liveMessages.forEach((liveMsg) => {
+      const exists = apiMessages.some(
+        (apiMsg) =>
+          apiMsg.id === liveMsg.id ||
+          (apiMsg.text === liveMsg.text &&
+            new Date(apiMsg.createdAt).getTime() -
+              new Date(liveMsg.createdAt).getTime() <
+              1000)
+      );
+
+      if (!exists) {
+        merged.push(liveMsg);
+      }
+    });
+
+    return merged.sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+  }, [apiMessages, liveMessages]);
   // Scroll to bottom when new messages arrive
   useEffect(() => {
     if (autoScroll && messagesEndRef.current) {
@@ -51,7 +73,6 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
     }
   }, [allMessages, isTyping, autoScroll]);
 
-  // Handle manual scroll
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const element = e.currentTarget;
     const isAtBottom =
@@ -60,7 +81,11 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
   };
 
   const formatMessageTime = (dateString: string) => {
-    return format(new Date(dateString), "HH:mm");
+    try {
+      return format(new Date(dateString), "HH:mm");
+    } catch {
+      return "00:00";
+    }
   };
 
   if (isLoading) {
@@ -92,10 +117,11 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header with refresh button */}
+      {/* Header */}
       <div className="p-2 bg-gray-50 border-b flex justify-between items-center">
         <div className="text-xs text-gray-500">
-          {allMessages.length} messages
+          {allMessages.length}{" "}
+          {allMessages.length === 1 ? "message" : "messages"}
           {liveMessages.length > 0 && ` (${liveMessages.length} new)`}
         </div>
         <button
@@ -110,7 +136,7 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
         </button>
       </div>
 
-      {/* Messages Container */}
+      {/* Messages List */}
       <div
         className="flex-1 overflow-y-auto space-y-4 p-4"
         onScroll={handleScroll}
@@ -119,12 +145,12 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
           <div className="flex items-center justify-center h-full">
             <div className="text-center text-gray-500">
               <p>No messages yet</p>
-              <p className="text-sm">Start the conversation!</p>
+              <p className="text-sm mt-1">Start the conversation!</p>
             </div>
           </div>
         ) : (
           allMessages.map((message: Message) => {
-            const isOwnMessage = message.sender.id === currentUserId;
+            const isOwnMessage = message.sender?.id === currentUserId;
 
             return (
               <div
@@ -140,22 +166,27 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
                       : "bg-gray-200 text-gray-800 rounded-bl-none"
                   }`}
                 >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium">
-                      {isOwnMessage ? "You" : message.sender.name || "User"}
-                    </span>
+                  {!isOwnMessage && (
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-medium">
+                        {message.sender?.name || "User"}
+                      </span>
+                    </div>
+                  )}
+
+                  <p className="break-words">{message.text}</p>
+
+                  <div className="flex justify-between items-center mt-1">
                     <span className="text-xs opacity-75">
                       {formatMessageTime(message.createdAt)}
                     </span>
-                  </div>
-                  <p className="break-words">{message.text}</p>
-                  <div className="flex justify-end mt-1">
+
                     {isOwnMessage && (
-                      <div className="text-xs">
+                      <div className="text-xs ml-2">
                         {message.seen ? (
-                          <CheckCheck className="w-4 h-4" />
+                          <CheckCheck className="w-4 h-4 text-blue-300" />
                         ) : (
-                          <Check className="w-4 h-4" />
+                          <Check className="w-4 h-4 text-gray-300" />
                         )}
                       </div>
                     )}
@@ -166,10 +197,9 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
           })
         )}
 
-        {/* Typing Indicator */}
         {isTyping && (
           <div className="flex justify-start">
-            <div className="bg-gray-200 text-gray-800 rounded-2xl rounded-bl-none px-4 py-2">
+            <div className="bg-gray-200 text-gray-800 rounded-2xl rounded-bl-none px-4 py-3">
               <div className="flex gap-1">
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150" />
@@ -181,14 +211,13 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
 
         <div ref={messagesEndRef} />
 
-        {/* Scroll to bottom button */}
         {!autoScroll && (
           <button
             onClick={() => {
               setAutoScroll(true);
               messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
             }}
-            className="fixed bottom-24 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700"
+            className="fixed bottom-24 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
           >
             ↓
           </button>

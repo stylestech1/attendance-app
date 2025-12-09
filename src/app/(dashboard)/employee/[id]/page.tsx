@@ -110,7 +110,6 @@ const EmployeePage = () => {
       setIsCheckedIn(savedState.isCheckedIn);
       setIsBreak(savedState.isBreak);
 
-      // إذا كان فيه attendance محفوظ، أضفه للجدول
       if (savedState.currentAttendance) {
         setAttendance((prev) => {
           const exists = prev.some(
@@ -128,7 +127,6 @@ const EmployeePage = () => {
   useEffect(() => {
     if (!auth?.token) {
       console.log("No token found, redirecting to login");
-      router.replace("/login");
       return;
     }
 
@@ -224,7 +222,6 @@ const EmployeePage = () => {
           attendanceData = result.data.attendance;
         }
 
-        // دمج البيانات المحفوظة مع البيانات من السيرفر
         const savedState = loadEmployeeState();
         if (savedState?.currentAttendance) {
           const exists = attendanceData.some(
@@ -237,7 +234,6 @@ const EmployeePage = () => {
 
         setAttendance(attendanceData);
 
-        // تحديث حالة checkin/break بناءً على البيانات
         const ongoingAttendance = attendanceData.find(
           (att) => att.checkInAt && !att.checkOutAt
         );

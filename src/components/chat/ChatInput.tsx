@@ -3,7 +3,11 @@ import { useState, useRef, useEffect } from "react";
 import { useAddMessageMutation } from "@/redux/api/chatApi";
 import { socketService } from "@/services/socketService";
 import { SOCKET_EVENTS } from "@/constants/socketEvents";
-import { Send, Smile, Paperclip } from "lucide-react";
+import { Send } from "lucide-react";
+import { useAppDispatch } from "@/redux/store";
+import { useAuth } from "@/context/AuthContext";
+import { Message } from "@/types/chat";
+import { addLiveMessage } from "@/redux/features/chatSlice";
 
 interface ChatInputProps {
   conversationId: string;
@@ -14,28 +18,78 @@ export default function ChatInput({ conversationId }: ChatInputProps) {
   const [addMessage, { isLoading }] = useAddMessageMutation();
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const socket = socketService.getSocket();
+  // const dispatch = useAppDispatch();
+  // const { auth } = useAuth();
 
   const handleSend = async () => {
     if (!message.trim() || isLoading) return;
 
+    // const messageText = message.trim();
+    // const tempId = `temp-${Date.now()}`;
+
     try {
-      console.log("📤 Sending message:", message.trim());
-      const result = await addMessage({
-        conversationId,
-        text: message.trim(),
-      }).unwrap();
-      
-      console.log("✅ Message sent successfully:", result);
+      // const tempMessage: Message = {
+      //   id: tempId,
+      //   text: messageText,
+      //   conversationId,
+      //   sender: {
+      //     id: auth?.id || '',
+      //   },
+      //   createdAt: new Date().toISOString(),
+      //   seen: false,
+      //   isTemp: true,
+      // };
+
+      // dispatch(addLiveMessage(tempMessage));
+
+      const socket = socketService.getSocket();
+
+      if (socket?.connected) {
+        socket.emit(SOCKET_EVENTS.SEND_MESSAGE, {
+          conversationId,
+          text: message.trim(),
+        });
+      } else {
+        await addMessage({
+          conversationId,
+          text: message.trim(),
+        }).unwrap();
+      }
+
       setMessage("");
       clearTypingIndicator();
-      
-      // Emit message sent event via socket
-      socket?.emit(SOCKET_EVENTS.SEND_MESSAGE, {
-        conversationId,
-        message: result,
-      });
+      stopTyping();
     } catch (error) {
       console.error("❌ Failed to send message:", error);
+    }
+  };
+
+  const startTyping = () => {
+    const socket = socketService.getSocket();
+    if (!socket?.connected || !conversationId) {
+      console.log("⚠️ Socket not connected for typing");
+      return;
+    }
+
+    console.log("✍️ Emitting typing:", conversationId);
+    socketService.emit(SOCKET_EVENTS.TYPING, { conversationId });
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+    typingTimeoutRef.current = setTimeout(() => {
+      stopTyping();
+    }, 2000);
+  };
+
+  const stopTyping = () => {
+    if (!socket?.connected || !conversationId) return;
+
+    socket.emit(SOCKET_EVENTS.STOP_TYPING, { conversationId });
+    console.log("🤚 Emitting stopTyping:", conversationId);
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
     }
   };
 
@@ -46,33 +100,33 @@ export default function ChatInput({ conversationId }: ChatInputProps) {
     }
   };
 
-  const handleTyping = () => {
-    if (!socket?.connected) {
-      console.log("⚠️ Socket not connected, cannot emit typing");
-      return;
-    }
+  // const handleTyping = () => {
+  //   if (!socket?.connected) {
+  //     console.log("⚠️ Socket not connected, cannot emit typing");
+  //     return;
+  //   }
 
-    // Emit typing event
-    socket?.emit(SOCKET_EVENTS.TYPING, { conversationId });
-    console.log("✍️ Emitting typing event for:", conversationId);
+  //   // Emit typing event
+  //   socket?.emit(SOCKET_EVENTS.TYPING, { conversationId });
+  //   console.log("✍️ Emitting typing event for:", conversationId);
 
-    // Clear previous timeout
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
+  //   // Clear previous timeout
+  //   if (typingTimeoutRef.current) {
+  //     clearTimeout(typingTimeoutRef.current);
+  //   }
 
-    // Set timeout to stop typing
-    typingTimeoutRef.current = setTimeout(() => {
-      socket?.emit(SOCKET_EVENTS.STOP_TYPING, { conversationId });
-      console.log("🤚 Emitting stop typing for:", conversationId);
-    }, 2000);
-  };
+  //   // Set timeout to stop typing
+  //   typingTimeoutRef.current = setTimeout(() => {
+  //     socket?.emit(SOCKET_EVENTS.STOP_TYPING, { conversationId });
+  //     console.log("🤚 Emitting stop typing for:", conversationId);
+  //   }, 2000);
+  // };
 
   const clearTypingIndicator = () => {
     if (socket?.connected) {
       socket?.emit(SOCKET_EVENTS.STOP_TYPING, { conversationId });
     }
-    
+
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = null;
@@ -82,32 +136,22 @@ export default function ChatInput({ conversationId }: ChatInputProps) {
   useEffect(() => {
     return () => {
       clearTypingIndicator();
+      stopTyping();
     };
   }, []);
 
   return (
     <div className="flex items-center gap-2">
-      {/* Attachment Button */}
-      <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-        <Paperclip className="w-5 h-5 text-gray-500" />
-      </button>
-
-      {/* Emoji Button */}
-      <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-        <Smile className="w-5 h-5 text-gray-500" />
-      </button>
-
-      {/* Message Input */}
+      {/* Textarea */}
       <div className="flex-1 relative">
         <textarea
           value={message}
           onChange={(e) => {
-            const newValue = e.target.value;
-            setMessage(newValue);
-            
-            // Only emit typing if there's text and socket is connected
-            if (newValue.trim() && socket?.connected) {
-              handleTyping();
+            const val = e.target.value;
+            setMessage(val);
+
+            if (val.trim() && conversationId && socket?.connected) {
+              startTyping();
             }
           }}
           onKeyDown={handleKeyDown}

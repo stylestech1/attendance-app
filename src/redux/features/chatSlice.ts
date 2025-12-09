@@ -6,7 +6,7 @@ interface ChatState {
   conversations: Record<string, Conversation>;
   selectedConversationId: string | null;
   typing: Record<string, boolean>;
-  onlineUsers: Record<string, boolean>;
+  onlineUsers: string[];
 }
 
 const initialState: ChatState = {
@@ -14,7 +14,7 @@ const initialState: ChatState = {
   conversations: {},
   selectedConversationId: null,
   typing: {},
-  onlineUsers: {},
+  onlineUsers: [],
 };
 
 const chatSlice = createSlice({
@@ -29,23 +29,45 @@ const chatSlice = createSlice({
     // 2️⃣ Add Message
     addLiveMessage(state, action: PayloadAction<Message>) {
       const msg = action.payload;
-      const convId = action.payload.conversationId;
+      const convId = msg.conversationId;
 
       if (!state.liveMessages[convId]) {
         state.liveMessages[convId] = [];
       }
 
-      state.liveMessages[convId].push(msg);
+      if (!state.liveMessages[convId].some((m) => m.id === msg.id)) {
+        state.liveMessages[convId].push(msg);
+      }
 
-      // update last message
       if (state.conversations[convId]) {
         state.conversations[convId].lastMessage = msg;
+
+        if (!state.conversations[convId].messages) {
+          state.conversations[convId].messages = [];
+        }
+
+        const msgExists = state.conversations[convId].messages?.some(
+          (m) => m.id === msg.id
+        );
+
+        if (!msgExists) {
+          state.conversations[convId].messages?.push(msg);
+        }
       }
     },
 
     // 3️⃣ Update Converstation
     updateConversation(state, action: PayloadAction<Conversation>) {
-      state.conversations[action.payload.id] = action.payload;
+      const conv = action.payload;
+      const oldMessages = state.liveMessages[conv.id] || [];
+
+      state.conversations[conv.id] = conv;
+      state.liveMessages[conv.id] = [
+        ...oldMessages,
+        ...(conv.messages?.filter(
+          (m) => !oldMessages.some((om) => om.id === m.id)
+        ) || []),
+      ];
     },
 
     // 4️⃣ Mark Seen
@@ -75,13 +97,22 @@ const chatSlice = createSlice({
     },
 
     // 7️⃣ Show User Online
-    setUserOnline(state, action: PayloadAction<{ userId: string }>) {
-      state.onlineUsers[action.payload.userId] = true;
+    setUserOnline: (state, action: PayloadAction<{ userId: string }>) => {
+      const { userId } = action.payload;
+      if (!state.onlineUsers.includes(userId)) {
+        state.onlineUsers.push(userId);
+      }
     },
 
     // 7️⃣ Show User Offline
-    setUserOffline(state, action: PayloadAction<{ userId: string }>) {
-      state.onlineUsers[action.payload.userId] = false;
+    setUserOffline: (state, action: PayloadAction<{ userId: string }>) => {
+      const { userId } = action.payload;
+      state.onlineUsers = state.onlineUsers.filter(id => id !== userId);
+    },
+
+    // 8️⃣ Show All Users that online 
+    setOnlineUsers: (state, action: PayloadAction<string[]>) => {
+      state.onlineUsers = action.payload;
     },
   },
 });
@@ -94,6 +125,7 @@ export const {
   addConversationLocal,
   setTyping,
   setUserOnline,
-  setUserOffline
+  setUserOffline,
+  setOnlineUsers
 } = chatSlice.actions;
 export default chatSlice.reducer;

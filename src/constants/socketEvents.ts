@@ -7,5 +7,6 @@ export const SOCKET_EVENTS = {
   MARK_SEEN: "markSeen",
   USER_ONLINE: "userOnline",
   USER_OFFLINE: "userOffline",
-  LAST_SEEN: "lastSeen",
+  PRESENCE_LIST: "presenceList",
+  SEEN_UPDATE: "seenUpdate",
 };

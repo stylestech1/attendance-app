@@ -52,7 +52,6 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (!auth?.token) {
       console.log("No token found, redirecting to login");
-      router.replace("/login");
       return;
     }
 
@@ -107,7 +106,6 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (!auth?.token) {
       console.log("No token found, redirecting to login");
-      router.replace("/login");
       return;
     }
 

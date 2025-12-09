@@ -14,6 +14,8 @@ export type Conversation = {
   } | null;
   createdAt: string;
   updatedAt: string;
+  messages?: Message[];
+  unreadCount?: number;
 };
 
 export type Message = {
@@ -23,6 +25,8 @@ export type Message = {
   sender: UserMini;
   seen: boolean;
   createdAt: string;
+  updatedAt?: string
+  isTemp? : boolean
 };
 
 export type ApiResponse<T> = {
