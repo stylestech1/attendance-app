@@ -124,16 +124,6 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
           {allMessages.length === 1 ? "message" : "messages"}
           {liveMessages.length > 0 && ` (${liveMessages.length} new)`}
         </div>
-        <button
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="p-1 hover:bg-gray-200 rounded"
-          title="Refresh messages"
-        >
-          <RefreshCw
-            className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`}
-          />
-        </button>
       </div>
 
       {/* Messages List */}

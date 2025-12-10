@@ -18,12 +18,24 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 interface ChatSidebarProps {
   conversations: Conversation[];
   selectedConvId: string | null;
   onSelectConversation: (id: string | null) => void;
 }
+
+// Types
+type TProfile = {
+  id: string;
+  jobId: number;
+  name: string;
+  email: string;
+  position: string;
+  phone: string;
+  role: string;
+};
 
 export default function ChatSidebar({
   conversations,
@@ -35,11 +47,13 @@ export default function ChatSidebar({
     "conversations"
   );
   const router = useRouter();
-  const { auth } = useAuth();
+  const { auth, logout } = useAuth();
   const onlineUsers = useAppSelector(
     (state: RootState) => state.chat.onlineUsers
   );
   const { getPresenceList } = useChatSocket();
+  const [profile, setProfile] = useState<TProfile | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (getPresenceList) {
@@ -52,6 +66,47 @@ export default function ChatSidebar({
   const [createConversation] = useCreateOrGetConversationMutation();
 
   const conversationsArray = Array.isArray(conversations) ? conversations : [];
+
+  // Fetching Information
+  useEffect(() => {
+    if (!auth?.token) {
+      console.log("No token found, redirecting to login");
+      return;
+    }
+
+    const apiURL = process.env.NEXT_PUBLIC_API_URL;
+
+    const getInfoData = async () => {
+      try {
+        setLoading(false);
+        const res = await fetch(`${apiURL}/api/v1/userDashboard/getMyData`, {
+          method: "GET",
+          headers: {
+            "Content-type": "application/json",
+            Authorization: `Bearer ${auth.token}`,
+          },
+        });
+        const result = await res.json();
+        if (res.ok) {
+          setProfile(result.data);
+        } else {
+          toast.error(result.message, {
+            style: { background: "#dc2626", color: "#fff" },
+          });
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error(error.message, {
+            style: { background: "#dc2626", color: "#fff" },
+          });
+        }
+        logout();
+      } finally {
+        setLoading(false);
+      }
+    };
+    getInfoData();
+  }, [auth.token, logout, router]);
 
   // Filter Conversation
 
@@ -96,10 +151,28 @@ export default function ChatSidebar({
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="p-4 border-b flex items-start justify-between">
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <MessageSquare className="w-6 h-6" />
-          Messages
-        </h1>
+        <div className="text-xl font-bold flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+            <span className="text-white font-semibold">
+              {profile?.name.charAt(0) || "U"}
+            </span>
+          </div>
+          <div>
+            {profile && (
+              <h1 className="text-blue-600">{profile.name.split(" ")[0]}</h1>
+            )}
+            <div className="flex items-center gap-1">
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  true ? "bg-green-500" : "bg-gray-400"
+                }`}
+              ></div>
+              <p className="text-xs text-gray-500 capitalize">
+                {profile?.position}
+              </p>
+            </div>
+          </div>
+        </div>
 
         <button
           onClick={router.back}
@@ -237,13 +310,6 @@ export default function ChatSidebar({
                             {conversation.lastMessage.text || "📎 Attachment"}
                           </p>
                         )}
-
-                        {/* Unread indicator */}
-                        {/* {!conversation.lastMessage?.seen && (
-                          <div className="inline-flex items-center justify-center w-5 h-5 text-xs font-semibold text-white bg-red-500 rounded-full mt-1">
-                            {conversation.unreadCount}
-                          </div>
-                        )} */}
                       </div>
                     </div>
                   </div>
@@ -308,7 +374,7 @@ export default function ChatSidebar({
                         </span>
                       </div>
                       <p className="text-sm text-gray-500 truncate max-w-[150px]">
-                        {user.position} • {user.email}
+                        {user.position}
                       </p>
                     </div>
                   </div>
@@ -335,48 +401,11 @@ export default function ChatSidebar({
                     )}
                   </button>
                 </div>
-
-                {/* User Details */}
-                <div className="mt-3 flex items-center text-xs text-gray-500">
-                  <div className="flex items-center gap-4">
-                    <span>📞 {user.phone}</span>
-                    <span>👔 Job #{user.jobId}</span>
-                    <span
-                      className={`px-2 py-0.5 rounded ${
-                        user.active
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {user.active ? "Active" : "Inactive"}
-                    </span>
-                  </div>
-                </div>
               </div>
             );
           })
         )}
       </div>
-
-      {/* Current User Info */}
-      {/* <div className="p-4 border-t bg-gray-50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-              <span className="text-white font-semibold">
-                {auth.name?.charAt(0) || "U"}
-              </span>
-            </div>
-            <div>
-              <p className="font-semibold text-sm">{auth.name || "User"}</p>
-              <p className="text-xs text-gray-500 capitalize">{auth.role}</p>
-            </div>
-          </div>
-          <div className={`w-2 h-2 rounded-full ${
-            true ? "bg-green-500" : "bg-gray-400"
-          }`}></div>
-        </div>
-      </div> */}
     </div>
   );
 }

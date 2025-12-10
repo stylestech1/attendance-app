@@ -4,7 +4,7 @@ import {
   MarkSeenResponse,
   Message,
 } from "@/types/chat";
-import { api } from "./baseApi";
+import { api } from "./chatBaseApi";
 import { TUser } from "@/types/user";
 
 export const chatApi = api.injectEndpoints({

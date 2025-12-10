@@ -5,6 +5,8 @@ import Proivder from "@/context/Proivder";
 import ReduxProvider from "@/redux/provider";
 import ChatButton from "@/components/chat/ChatButton";
 import { SocketProvider } from "@/providers/SocketProvider";
+import NotificationBell from "@/components/notification/NotificationBell";
+import { ToastProvider } from "@/providers/ToastProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +37,8 @@ export default function RootLayout({
         <ReduxProvider>
           <Proivder>
             <SocketProvider>
+              <NotificationBell />
+              <ToastProvider />
               {children}
               <ChatButton />
             </SocketProvider>

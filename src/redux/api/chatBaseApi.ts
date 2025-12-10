@@ -4,7 +4,7 @@ import { RootState } from "../store";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const api = createApi({
-  reducerPath: "api",
+  reducerPath: "chatApi",
   baseQuery: fetchBaseQuery({
     baseUrl: API_BASE_URL,
     prepareHeaders: (headers, { getState }) => {
@@ -13,7 +13,7 @@ export const api = createApi({
       return headers;
     },
   }),
-  tagTypes: ["Conversations", "Messages", 'Users'],
+  tagTypes: ["Conversations", "Messages", "Users"],
   refetchOnFocus: true,
   refetchOnReconnect: true,
   refetchOnMountOrArgChange: true,

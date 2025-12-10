@@ -81,8 +81,6 @@ export default function ChatPage() {
   // ------------------ RENDER CHAT UI ------------------
   return (
     <div className="flex h-screen bg-gray-50">
-      <SocketStatus />
-
       {/* Sidebar */}
       <div className="w-1/4 border-r bg-white">
         <ChatSidebar

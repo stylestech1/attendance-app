@@ -3,16 +3,22 @@ import { configureStore } from "@reduxjs/toolkit";
 import { useDispatch, useSelector } from "react-redux";
 import chatSlice from "./features/chatSlice";
 import authSlice from "./features/authSlice";
+import notificationsSlice from "./features/notificationSlice";
 import { chatApi } from "./api/chatApi";
+import { notificationApi } from "./api/notificationApi";
 
 export const store = configureStore({
   reducer: {
     chat: chatSlice,
     auth: authSlice,
+    notifications: notificationsSlice,
     [chatApi.reducerPath]: chatApi.reducer,
+    [notificationApi.reducerPath]: notificationApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(chatApi.middleware),
+    getDefaultMiddleware()
+      .concat(chatApi.middleware)
+      .concat(notificationApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

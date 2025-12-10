@@ -1,3 +1,5 @@
+import { TPagination } from "./notificationType";
+
 export type UserMini = {
   id: string;
   name?: string;
@@ -25,14 +27,16 @@ export type Message = {
   sender: UserMini;
   seen: boolean;
   createdAt: string;
-  updatedAt?: string
-  isTemp? : boolean
+  updatedAt?: string;
+  isTemp?: boolean;
 };
 
 export type ApiResponse<T> = {
   message: string;
   results?: number;
   data: T;
+  success?: boolean;
+  pagination?: TPagination;
 };
 
 export type MarkSeenResponse = {

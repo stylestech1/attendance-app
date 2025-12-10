@@ -1,8 +1,8 @@
-// providers/SocketProvider.tsx
 'use client'
 import { socketService } from "@/services/socketService";
 import { useAppSelector } from "@/redux/store";
 import { useEffect } from "react";
+import { notificationService } from "@/services/notificationService";
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
   const token = useAppSelector((state) => state.auth.token);
@@ -14,11 +14,13 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
     
     console.log("🚀 Initializing socket in SocketProvider");
-    const socket = socketService.initialize(token);
+    socketService.initialize(token);
+    notificationService.initialize();
     
     return () => {
       console.log("🔌 Disconnecting socket from SocketProvider");
       socketService.disconnect();
+      notificationService.cleanup();
     };
   }, [token]);
   
