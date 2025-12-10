@@ -6,7 +6,7 @@ import {
   useGetAllNotificationsQuery,
   useMarkAllAsReadMutation,
 } from "@/redux/api/notificationApi";
-import { Bell, Check, Settings, ExternalLink, Volume2, VolumeX } from "lucide-react";
+import { Bell, Check, ExternalLink, Volume2, VolumeX } from "lucide-react";
 import { format } from "date-fns";
 import { TNotification } from "@/types/notificationType";
 import { usePathname, useRouter } from "next/navigation";
@@ -17,6 +17,7 @@ export default function NotificationBell() {
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [prevUnreadCount, setPrevUnreadCount] = useState(0);
   const [isPlayingSound, setIsPlayingSound] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const token = useAppSelector((state) => state.auth.token);
@@ -26,18 +27,45 @@ export default function NotificationBell() {
   // Initialize audio
   useEffect(() => {
     if (typeof window !== "undefined") {
-      audioRef.current = new Audio("/audio/notify.wav");
+      console.log("🔊 Initializing audio...");
+      
+      audioRef.current = new Audio();
+      audioRef.current.src = "/audio/notify.wav";
       audioRef.current.preload = "auto";
-      audioRef.current.volume = 1;
+      audioRef.current.volume = 1; 
+      
+      audioRef.current.load();
     }
+
+    const handleUserInteraction = () => {
+      if (!hasUserInteracted) {
+        console.log("👆 User interaction detected, enabling audio");
+        setHasUserInteracted(true);
+        
+        if (audioRef.current) {
+          audioRef.current.play().then(() => {
+            audioRef.current?.pause();
+          }).catch(() => {
+            console.log("Audio activation may require explicit user click");
+          });
+        }
+      }
+    };
+
+    document.addEventListener('click', handleUserInteraction);
+    document.addEventListener('keydown', handleUserInteraction);
+    document.addEventListener('touchstart', handleUserInteraction);
 
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('keydown', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
     };
-  }, []);
+  }, [hasUserInteracted]);
 
   const {
     data: notifications,
@@ -58,35 +86,40 @@ export default function NotificationBell() {
     (n) => n.status === "unread"
   ).length;
 
-  // Play sound when new notification arrives
   useEffect(() => {
-    if (unreadCount > prevUnreadCount && isSoundEnabled && audioRef.current) {
+    if (unreadCount > prevUnreadCount && isSoundEnabled && hasUserInteracted) {
       playNotificationSound();
     }
     setPrevUnreadCount(unreadCount);
-  }, [unreadCount, prevUnreadCount, isSoundEnabled]);
+  }, [unreadCount, prevUnreadCount, isSoundEnabled, hasUserInteracted]);
 
   const playNotificationSound = async () => {
-    if (!isSoundEnabled || !audioRef.current) return;
+    if (!isSoundEnabled || !audioRef.current || !hasUserInteracted) {
+      console.log("🔇 Sound disabled or no user interaction");
+      return;
+    }
 
     try {
       setIsPlayingSound(true);
-      
-      // Reset audio to start
+
       audioRef.current.currentTime = 0;
-      
-      // Play with promise for better handling
+      audioRef.current.volume = 0.7;
+
       await audioRef.current.play();
-      
-      // Add visual feedback
+      console.log("🔔 Notification sound played successfully");
+
       setTimeout(() => setIsPlayingSound(false), 500);
+
     } catch (error) {
-      console.error("Error playing notification sound:", error);
+      console.error("❌ Error playing notification sound:", error);
       setIsPlayingSound(false);
+      
+      if (audioRef.current) {
+        audioRef.current.load();
+      }
     }
   };
 
-  // Click outside to close
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -128,20 +161,8 @@ export default function NotificationBell() {
     setIsSoundEnabled(!isSoundEnabled);
   };
 
-  const testSound = () => {
-    playNotificationSound();
-  };
-
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Sound test button (optional - for debugging) */}
-      {/* <button
-        onClick={testSound}
-        className="fixed top-24 right-6 p-2 bg-gray-800 text-white rounded-lg z-40"
-      >
-        Test Sound
-      </button> */}
-
       {/* Bell Icon */}
       {!(
         pathname.startsWith("/chat") ||
@@ -161,31 +182,19 @@ export default function NotificationBell() {
         >
           <div className="relative">
             <Bell className="w-7 h-7 text-white transition-transform duration-300 group-hover:scale-110" />
-            
+
             {/* Unread badge */}
             {unreadCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg animate-pulse">
+              <span className="absolute -top-1.5 -right-1.5 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg ">
                 {unreadCount}
               </span>
             )}
-            
+
             {/* Sound playing indicator */}
             {isPlayingSound && (
               <div className="absolute inset-0 rounded-2xl bg-blue-400 animate-ping opacity-20"></div>
             )}
           </div>
-          
-          {/* Tooltip */}
-          {isHovered && (
-            <div className="absolute -top-10 right-1/2 translate-x-1/2 bg-gray-900 text-white text-xs py-1.5 px-3 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-              <span className="font-semibold">Notifications</span>
-              {unreadCount > 0 && (
-                <span className="ml-2 bg-red-500 px-1.5 py-0.5 rounded text-xs">
-                  {unreadCount} new
-                </span>
-              )}
-            </div>
-          )}
         </button>
       )}
 
@@ -200,15 +209,21 @@ export default function NotificationBell() {
                   <div>
                     <h3 className="font-bold text-lg">Notifications</h3>
                     <p className="text-blue-100 text-sm mt-1">
-                      {unreadCount > 0 ? `${unreadCount} unread notifications` : "All caught up!"}
+                      {unreadCount > 0
+                        ? `${unreadCount} unread notifications`
+                        : "All caught up!"}
                     </p>
                   </div>
-                  
+
                   {/* Sound control button */}
                   <button
                     onClick={toggleSound}
                     className="cursor-pointer p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors relative group"
-                    aria-label={isSoundEnabled ? "Mute notification sound" : "Enable notification sound"}
+                    aria-label={
+                      isSoundEnabled
+                        ? "Mute notification sound"
+                        : "Enable notification sound"
+                    }
                   >
                     {isSoundEnabled ? (
                       <Volume2 className="w-5 h-5" />
@@ -222,13 +237,22 @@ export default function NotificationBell() {
                 </div>
               </div>
             </div>
-            
+
             {/* Sound indicator */}
             <div className="mt-3 flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${isSoundEnabled ? 'bg-green-400 animate-pulse' : 'bg-gray-400'}`}></div>
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  isSoundEnabled ? "bg-green-400 " : "bg-gray-400"
+                }`}
+              ></div>
               <span className="text-xs text-blue-200">
                 {isSoundEnabled ? "Sound enabled" : "Sound muted"}
               </span>
+              {!hasUserInteracted && (
+                <span className="text-xs text-yellow-300 ml-2">
+                  (Click anywhere to activate sound)
+                </span>
+              )}
             </div>
           </div>
 
@@ -244,7 +268,7 @@ export default function NotificationBell() {
                   Mark all as read
                 </button>
               )}
-              
+
               <div className="flex items-center gap-2 text-xs text-gray-600">
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
@@ -269,10 +293,13 @@ export default function NotificationBell() {
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  onClick={() => notification.refId && handleNotificationClick(notification.module)}
+                  onClick={() =>
+                    notification.refId &&
+                    handleNotificationClick(notification.module)
+                  }
                   className={`p-5 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-all duration-150 ${
-                    notification.status === "unread" 
-                      ? "bg-gradient-to-r from-blue-50/50 to-white border-l-4 border-l-blue-500" 
+                    notification.status === "unread"
+                      ? "bg-gradient-to-r from-blue-50/50 to-white border-l-4 border-l-blue-500"
                       : ""
                   }`}
                 >
@@ -283,7 +310,7 @@ export default function NotificationBell() {
                           <div
                             className={`w-3 h-3 rounded-full flex-shrink-0 ${
                               notification.status === "unread"
-                                ? "bg-blue-500 animate-pulse"
+                                ? "bg-blue-500 "
                                 : "bg-gray-300"
                             }`}
                           />
@@ -308,7 +335,10 @@ export default function NotificationBell() {
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-4">
                           <span className="text-xs text-gray-500 font-medium">
-                            {format(new Date(notification.createdAt), "MMM d, yyyy")}
+                            {format(
+                              new Date(notification.createdAt),
+                              "MMM d, yyyy"
+                            )}
                           </span>
                           <span className="text-xs text-gray-500">
                             {format(new Date(notification.createdAt), "HH:mm")}
@@ -319,7 +349,7 @@ export default function NotificationBell() {
                             </span>
                           )}
                         </div>
-                        
+
                         {notification.refId && (
                           <ExternalLink className="w-4 h-4 text-gray-400 hover:text-blue-600 transition-colors" />
                         )}
@@ -333,9 +363,15 @@ export default function NotificationBell() {
                 <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
                   <Bell className="w-10 h-10 text-gray-400" />
                 </div>
-                <h4 className="font-bold text-gray-800 text-lg mb-2">No Notifications</h4>
-                <p className="text-gray-500 text-sm mb-1">{`You're`} all caught up!</p>
-                <p className="text-gray-400 text-xs">New notifications will appear here</p>
+                <h4 className="font-bold text-gray-800 text-lg mb-2">
+                  No Notifications
+                </h4>
+                <p className="text-gray-500 text-sm mb-1">
+                  {`You're`} all caught up!
+                </p>
+                <p className="text-gray-400 text-xs">
+                  New notifications will appear here
+                </p>
               </div>
             )}
           </div>
@@ -344,7 +380,7 @@ export default function NotificationBell() {
           <div className="p-4 border-t border-gray-100 bg-gray-50">
             <button
               onClick={() => {
-                router.push('/notifications');
+                router.push("/notifications");
                 setIsOpen(false);
               }}
               className="w-full py-3 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 rounded-xl transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2"

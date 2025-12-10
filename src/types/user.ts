@@ -3,7 +3,7 @@ import { Message } from "./chat";
 export type TUser = {
   id: string;
   name: string;
-  active: boolean;
+  active: 'boolean';
   email: string;
   phone: string;
   role: "admin" | "employee";

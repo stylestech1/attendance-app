@@ -328,71 +328,72 @@ export default function ChatSidebar({
             <p className="text-sm">Try a different search term</p>
           </div>
         ) : (
-          filteredUsers.map((user) => {
-            const hasExistingChat = hasConversationWithUser(user.id);
-            const isOnline = isUserOnline(user.id);
-
-            return (
-              <div
-                key={user.id}
-                className="p-4 border-b hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    {/* Avatar */}
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold">
-                          {user.name.charAt(0)}
-                        </span>
+          filteredUsers
+            .filter((user) => user.active)
+            .map((user) => {
+              const hasExistingChat = hasConversationWithUser(user.id);
+              const isOnline = isUserOnline(user.id);
+              return (
+                <div
+                  key={user.id}
+                  className="p-4 border-b hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      {/* Avatar */}
+                      <div className="relative">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <span className="text-blue-600 font-semibold">
+                            {user.name.charAt(0)}
+                          </span>
+                        </div>
+                        {/* Online */}
+                        <div
+                          className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+                            isOnline ? "bg-green-500" : "bg-gray-400"
+                          }`}
+                          title={isOnline ? "Online" : "Offline"}
+                        ></div>
                       </div>
-                      {/* Online */}
-                      <div
-                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
-                          isOnline ? "bg-green-500" : "bg-gray-400"
-                        }`}
-                        title={isOnline ? "Online" : "Offline"}
-                      ></div>
+
+                      {/* User Info */}
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-gray-900">
+                            {user.name}
+                          </h3>
+                        </div>
+                        <p className="text-sm text-gray-500 truncate max-w-[150px]">
+                          {user.position}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* User Info */}
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-gray-900">
-                          {user.name}
-                        </h3>
-                      </div>
-                      <p className="text-sm text-gray-500 truncate max-w-[150px]">
-                        {user.position}
-                      </p>
-                    </div>
+                    {/* Action Button */}
+                    <button
+                      onClick={() => handleStartNewChat(user.id)}
+                      className={`px-3 py-1.5 text-sm rounded-lg flex items-center gap-2 transition-colors ${
+                        hasExistingChat
+                          ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          : "bg-blue-500 text-white hover:bg-blue-600"
+                      }`}
+                    >
+                      {hasExistingChat ? (
+                        <>
+                          <MessageSquare className="w-4 h-4" />
+                          Open Chat
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-4 h-4" />
+                          Message
+                        </>
+                      )}
+                    </button>
                   </div>
-
-                  {/* Action Button */}
-                  <button
-                    onClick={() => handleStartNewChat(user.id)}
-                    className={`px-3 py-1.5 text-sm rounded-lg flex items-center gap-2 transition-colors ${
-                      hasExistingChat
-                        ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        : "bg-blue-500 text-white hover:bg-blue-600"
-                    }`}
-                  >
-                    {hasExistingChat ? (
-                      <>
-                        <MessageSquare className="w-4 h-4" />
-                        Open Chat
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="w-4 h-4" />
-                        Message
-                      </>
-                    )}
-                  </button>
                 </div>
-              </div>
-            );
-          })
+              );
+            })
         )}
       </div>
     </div>
