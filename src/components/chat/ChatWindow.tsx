@@ -5,8 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useGetConversationMessagesQuery } from "@/redux/api/chatApi";
 import { useAppSelector } from "@/redux/store";
 import { Message } from "@/types/chat";
-import { format } from "date-fns";
-import { Check, CheckCheck, RefreshCw } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
+import { Check, CheckCheck, RefreshCw, Download, MoreVertical } from "lucide-react";
 import { useMarkMessagesSeen } from "./useMarkSeen";
 
 interface ChatWindowProps {
@@ -17,7 +17,9 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
   const { auth } = useAuth();
   const currentUserId = auth.id;
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
   const liveMessages = useAppSelector(
     (state) => state.chat.liveMessages[conversationId] || []
@@ -63,21 +65,44 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     );
   }, [apiMessages, liveMessages]);
-  // Scroll to bottom when new messages arrive
+
+  // Group messages by date
+  const groupedMessages = useMemo(() => {
+    const groups: { [key: string]: Message[] } = {};
+    
+    allMessages.forEach((message) => {
+      const date = format(new Date(message.createdAt), 'yyyy-MM-dd');
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(message);
+    });
+    
+    return groups;
+  }, [allMessages]);
+
+  // Scroll handling
   useEffect(() => {
-    if (autoScroll && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "end",
-      });
+    if (autoScroll && messagesEndRef.current && containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
   }, [allMessages, isTyping, autoScroll]);
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const element = e.currentTarget;
-    const isAtBottom =
-      element.scrollHeight - element.scrollTop - element.clientHeight < 50;
-    setAutoScroll(isAtBottom);
+  const handleScroll = () => {
+    if (containerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setAutoScroll(isAtBottom);
+      setShowScrollButton(!isAtBottom && scrollHeight > clientHeight);
+    }
+  };
+
+  const scrollToBottom = () => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+      setAutoScroll(true);
+      setShowScrollButton(false);
+    }
   };
 
   const formatMessageTime = (dateString: string) => {
@@ -88,12 +113,32 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
     }
   };
 
+  const formatGroupDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      if (format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) {
+        return 'Today';
+      } else if (format(date, 'yyyy-MM-dd') === format(yesterday, 'yyyy-MM-dd')) {
+        return 'Yesterday';
+      } else {
+        return format(date, 'MMMM d, yyyy');
+      }
+    } catch {
+      return dateString;
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500 flex flex-col items-center">
-          <RefreshCw className="w-8 h-8 animate-spin mb-2" />
-          <p>Loading messages...</p>
+      <div className="flex flex-col items-center justify-center h-full">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <h3 className="text-lg font-semibold text-gray-700">Loading Messages</h3>
+          <p className="text-sm text-gray-500 mt-1">Fetching your conversation...</p>
         </div>
       </div>
     );
@@ -101,14 +146,18 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <p className="text-red-500 mb-2">Error loading messages</p>
+      <div className="flex flex-col items-center justify-center h-full p-6">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <RefreshCw className="w-8 h-8 text-red-500" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">Connection Error</h3>
+          <p className="text-gray-600 mb-6">Unable to load messages. Please check your connection.</p>
           <button
             onClick={() => refetch()}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-2.5 px-6 rounded-lg transition-all duration-200"
           >
-            Retry
+            Retry Connection
           </button>
         </div>
       </div>
@@ -116,102 +165,115 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="p-2 bg-gray-50 border-b flex justify-between items-center">
-        <div className="text-xs text-gray-500">
-          {allMessages.length}{" "}
-          {allMessages.length === 1 ? "message" : "messages"}
-          {liveMessages.length > 0 && ` (${liveMessages.length} new)`}
-        </div>
-      </div>
+    <div className="h-full flex flex-col relative">
+      {/* Scroll to bottom button */}
+      {showScrollButton && (
+        <button
+          onClick={scrollToBottom}
+          className="absolute bottom-24 right-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-10 hover:scale-105"
+        >
+          <div className="w-5 h-5 flex items-center justify-center">↓</div>
+        </button>
+      )}
 
-      {/* Messages List */}
+      {/* Messages Container */}
       <div
-        className="flex-1 overflow-y-auto space-y-4 p-4"
+        ref={containerRef}
+        className="flex-1 overflow-y-auto space-y-6 p-2 scroll-smooth"
         onScroll={handleScroll}
       >
-        {allMessages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center text-gray-500">
-              <p>No messages yet</p>
-              <p className="text-sm mt-1">Start the conversation!</p>
+        {Object.entries(groupedMessages).length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="text-center max-w-md">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <div className="text-4xl">💬</div>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-3">No Messages Yet</h3>
+              <p className="text-gray-600 text-lg">Start the conversation by sending your first message!</p>
             </div>
           </div>
         ) : (
-          allMessages.map((message: Message) => {
-            const isOwnMessage = message.sender?.id === currentUserId;
-
-            return (
-              <div
-                key={message.id}
-                className={`flex ${
-                  isOwnMessage ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-xs lg:max-w-md rounded-2xl px-4 py-2 ${
-                    isOwnMessage
-                      ? "bg-blue-600 text-white rounded-br-none"
-                      : "bg-gray-200 text-gray-800 rounded-bl-none"
-                  }`}
-                >
-                  {!isOwnMessage && (
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium">
-                        {message.sender?.name || "User"}
-                      </span>
-                    </div>
-                  )}
-
-                  <p className="break-words">{message.text}</p>
-
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-xs opacity-75">
-                      {formatMessageTime(message.createdAt)}
-                    </span>
-
-                    {isOwnMessage && (
-                      <div className="text-xs ml-2">
-                        {message.seen ? (
-                          <CheckCheck className="w-4 h-4 text-blue-300" />
-                        ) : (
-                          <Check className="w-4 h-4 text-gray-300" />
-                        )}
-                      </div>
-                    )}
-                  </div>
+          Object.entries(groupedMessages).map(([date, messages]) => (
+            <div key={date} className="space-y-4">
+              {/* Date Separator */}
+              <div className="flex items-center justify-center my-6">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-4 py-2 rounded-full">
+                  <span className="text-sm font-semibold text-blue-700">
+                    {formatGroupDate(date)}
+                  </span>
                 </div>
               </div>
-            );
-          })
+
+              {/* Messages for this date */}
+              {messages.map((message: Message) => {
+                const isOwnMessage = message.sender?.id === currentUserId;
+                const messageTime = formatMessageTime(message.createdAt);
+
+                return (
+                  <div
+                    key={message.id}
+                    className={`flex ${isOwnMessage ? "justify-end" : "justify-start"} px-2`}
+                  >
+                    <div
+                      className={`max-w-[70%] rounded-2xl px-5 py-3 shadow-sm ${
+                        isOwnMessage
+                          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-none"
+                          : "bg-white text-gray-800 rounded-bl-none border border-gray-200"
+                      }`}
+                    >
+                      {!isOwnMessage && (
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-bold text-gray-900 text-sm">
+                            {message.sender?.name || "User"}
+                          </span>
+                          <span className="text-xs text-gray-500">{messageTime}</span>
+                        </div>
+                      )}
+
+                      <p className="break-words leading-relaxed">{message.text}</p>
+
+                      <div className={`flex justify-between items-center mt-3 ${isOwnMessage ? 'mt-2' : ''}`}>
+                        {!isOwnMessage && (
+                          <span className="text-xs text-gray-500">{messageTime}</span>
+                        )}
+                        
+                        {isOwnMessage && (
+                          <div className="flex items-center gap-2 ml-auto">
+                            <span className="text-xs opacity-80">{messageTime}</span>
+                            <div className="text-xs">
+                              {message.seen ? (
+                                <CheckCheck className="w-4 h-4 text-blue-200" />
+                              ) : (
+                                <Check className="w-4 h-4 text-blue-200" />
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))
         )}
 
         {isTyping && (
-          <div className="flex justify-start">
-            <div className="bg-gray-200 text-gray-800 rounded-2xl rounded-bl-none px-4 py-3">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150" />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-300" />
+          <div className="flex justify-start px-2">
+            <div className="bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-bl-none px-5 py-4 shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150" />
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-300" />
+                </div>
+                <span className="text-sm text-gray-500">typing...</span>
               </div>
             </div>
           </div>
         )}
 
-        <div ref={messagesEndRef} />
-
-        {!autoScroll && (
-          <button
-            onClick={() => {
-              setAutoScroll(true);
-              messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-            }}
-            className="fixed bottom-24 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
-          >
-            ↓
-          </button>
-        )}
+        <div ref={messagesEndRef} className="h-4" />
       </div>
     </div>
   );

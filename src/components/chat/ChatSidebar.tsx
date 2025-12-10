@@ -214,9 +214,7 @@ export default function ChatSidebar({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="text"
-            placeholder={`Search ${
-              activeTab === "conversations" ? "conversations..." : "users..."
-            }`}
+            placeholder={`Search by Name`}
             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -363,15 +361,6 @@ export default function ChatSidebar({
                         <h3 className="font-semibold text-gray-900">
                           {user.name}
                         </h3>
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            user.role === "admin"
-                              ? "bg-purple-100 text-purple-800"
-                              : "bg-blue-100 text-blue-800"
-                          }`}
-                        >
-                          {user.role}
-                        </span>
                       </div>
                       <p className="text-sm text-gray-500 truncate max-w-[150px]">
                         {user.position}

@@ -7,8 +7,8 @@ import { useGetUserConversationsQuery } from "@/redux/api/chatApi";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
 import { setSelectedConversation } from "@/redux/features/chatSlice";
 import { useEffect, useRef } from "react";
-import SocketStatus from "@/components/chat/SocketStatus";
 import { useChatSocket } from "@/services/useChatSocket";
+import { MessageSquare, Users, AlertCircle } from "lucide-react";
 
 export default function ChatPage() {
   const { isAuthenticated, loading: authLoading, auth } = useAuth();
@@ -29,6 +29,7 @@ export default function ChatPage() {
   // Refetch on mount or login
   useEffect(() => {
     if (isAuthenticated) refetch();
+    refetch();
   }, [isAuthenticated, refetch]);
 
   // Join selected conversation room
@@ -48,41 +49,71 @@ export default function ChatPage() {
   // ------------------ LOADING & AUTH STATES ------------------
   if (authLoading || isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-lg">Loading chat...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <div className="text-lg text-gray-600 font-medium">
+            Loading chat...
+          </div>
+          <p className="text-sm text-gray-400 mt-2">
+            Preparing your conversations
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-lg">Please login to access chat</div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
+        <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 max-w-md w-full mx-4">
+          <MessageSquare className="w-16 h-16 text-blue-500 mx-auto mb-6" />
+          <h2 className="text-2xl font-bold text-gray-800 text-center mb-3">
+            Welcome to Chat
+          </h2>
+          <p className="text-gray-600 text-center mb-6">
+            Please login to access your conversations and connect with your
+            team.
+          </p>
+          <a
+            href="/login"
+            className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 text-center"
+          >
+            Go to Login
+          </a>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <div className="text-lg text-red-500">
-          Error loading conversations. Please try again.
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
+        <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 max-w-md w-full mx-4">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
+          <h2 className="text-2xl font-bold text-gray-800 text-center mb-3">
+            Connection Error
+          </h2>
+          <p className="text-gray-600 text-center mb-6">
+            We {`couldn't`} load your conversations. Please check your
+            connection and try again.
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+          >
+            Retry Connection
+          </button>
         </div>
-        <button
-          onClick={() => refetch()}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-        >
-          Retry
-        </button>
       </div>
     );
   }
 
   // ------------------ RENDER CHAT UI ------------------
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
       {/* Sidebar */}
-      <div className="w-1/4 border-r bg-white">
+      <div className="w-80 border-r border-gray-200 bg-white shadow-sm">
         <ChatSidebar
           conversations={conversations}
           selectedConvId={selectedConvId}
@@ -95,40 +126,60 @@ export default function ChatPage() {
         {selectedConversation ? (
           <>
             {/* Chat Header */}
-            <div className="bg-white border-b p-4">
+            <div className="bg-white border-b border-gray-200 p-5 shadow-sm">
               <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="font-semibold">
-                    {selectedConversation.members.find(
-                      (m) => m.id !== auth.id
-                    )?.name || "Unknown"}{" "}
-                  </h2>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
+                      <span className="text-white font-semibold text-lg">
+                        {selectedConversation.members
+                          .find((m) => m.id !== auth.id)
+                          ?.name?.charAt(0) || "U"}
+                      </span>
+                    </div>
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-gray-800 text-lg">
+                      {selectedConversation.members.find(
+                        (m) => m.id !== auth.id
+                      )?.name || "Unknown User"}
+                    </h2>
+                    <p className="text-sm text-green-600 font-medium">Online</p>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Messages Window */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto bg-gradient-to-b from-white to-gray-50/50 p-6">
               <ChatWindow conversationId={selectedConversation.id} />
             </div>
 
             {/* Input Area */}
-            <div className="border-t p-4 bg-white">
+            <div className="border-t border-gray-200 bg-white p-6 shadow-sm">
               <ChatInput conversationId={selectedConversation.id} />
             </div>
           </>
         ) : (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <h3 className="text-xl font-medium text-gray-600">
+          <div className="flex flex-col items-center justify-center h-full p-6">
+            <div className="max-w-md text-center">
+              <div className="inline-block p-6 bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl mb-6 shadow-sm">
+                {conversations.length === 0 ? (
+                  <MessageSquare className="w-20 h-20 text-blue-400" />
+                ) : (
+                  <Users className="w-20 h-20 text-blue-400" />
+                )}
+              </div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-3">
                 {conversations.length === 0
-                  ? "No conversations yet"
-                  : "Select a conversation"}
+                  ? "Start Your First Conversation"
+                  : "Welcome to Chat"}
               </h3>
-              <p className="text-gray-500">
+              <p className="text-gray-600 mb-8 text-lg">
                 {conversations.length === 0
-                  ? "Start a new conversation from your contacts"
-                  : "Choose from the sidebar to start chatting"}
+                  ? "Connect with your team members and start collaborating"
+                  : "Select a conversation from the sidebar to start chatting"}
               </p>
               {conversations.length > 0 && (
                 <button
@@ -137,9 +188,9 @@ export default function ChatPage() {
                     if (firstConv)
                       dispatch(setSelectedConversation(firstConv.id));
                   }}
-                  className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"
                 >
-                  Select First Conversation
+                  Open First Conversation
                 </button>
               )}
             </div>
