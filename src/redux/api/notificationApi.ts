@@ -8,7 +8,7 @@ export const notificationApi = api.injectEndpoints({
       TNotification[],
       { page: number; limit: number }
     >({
-      query: ({ page = 1, limit = 10 }) =>
+      query: ({ page = 1, limit = 100 }) =>
         `/api/v1/notifications?page=${page}&limit=${limit}`,
       transformResponse: (response: ApiResponse<TNotification[]>) => {
         return response.data || [];

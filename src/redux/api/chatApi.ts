@@ -11,7 +11,7 @@ export const chatApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Get All User in System
     getAllUser: builder.query<TUser[], void>({
-      query: () => `/api/v1/adminDashboard`,
+      query: () => `/api/v1/adminDashboard?limit=100&active=true`,
       transformResponse: (response: ApiResponse<TUser[]>) => response.data,
       providesTags: ["Users"],
     }),

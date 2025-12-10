@@ -204,7 +204,7 @@ export default function ChatSidebar({
           onClick={() => setActiveTab("users")}
         >
           <Users className="w-4 h-4" />
-          All Users ({allUsers.length})
+          All Users ({allUsers.length - 1})
         </button>
       </div>
 
@@ -329,7 +329,6 @@ export default function ChatSidebar({
           </div>
         ) : (
           filteredUsers
-            .filter((user) => user.active)
             .map((user) => {
               const hasExistingChat = hasConversationWithUser(user.id);
               const isOnline = isUserOnline(user.id);
