@@ -20,7 +20,10 @@ export default function ChatPage() {
     isLoading,
     error,
     refetch,
-  } = useGetUserConversationsQuery(undefined, { skip: !isAuthenticated });
+  } = useGetUserConversationsQuery(undefined, {
+    skip: !isAuthenticated,
+    refetchOnMountOrArgChange: true,
+  });
 
   const selectedConvId = useAppSelector(
     (state) => state.chat.selectedConversationId
@@ -29,8 +32,7 @@ export default function ChatPage() {
   // Refetch on mount or login
   useEffect(() => {
     if (isAuthenticated) refetch();
-    refetch();
-  }, [isAuthenticated, refetch]);
+  }, [isAuthenticated]);
 
   // Join selected conversation room
   const prevConvId = useRef<string | null>(null);
