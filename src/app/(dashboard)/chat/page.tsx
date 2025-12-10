@@ -4,9 +4,9 @@ import ChatSidebar from "@/components/chat/ChatSidebar";
 import ChatWindow from "@/components/chat/ChatWindow";
 import ChatInput from "@/components/chat/ChatInput";
 import { useGetUserConversationsQuery } from "@/redux/api/chatApi";
-import { useAppDispatch, useAppSelector } from "@/redux/store";
+import { RootState, useAppDispatch, useAppSelector } from "@/redux/store";
 import { setSelectedConversation } from "@/redux/features/chatSlice";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { useChatSocket } from "@/services/useChatSocket";
 import { MessageSquare, Users, AlertCircle } from "lucide-react";
 
@@ -14,6 +14,11 @@ export default function ChatPage() {
   const { isAuthenticated, loading: authLoading, auth } = useAuth();
   const dispatch = useAppDispatch();
   const { isInitialized, joinConversation } = useChatSocket();
+  
+  // Online users from Redux store
+  const onlineUsers = useAppSelector(
+    (state: RootState) => state.chat.onlineUsers
+  );
 
   const {
     data: conversations = [],
@@ -47,6 +52,41 @@ export default function ChatPage() {
   const selectedConversation = conversations.find(
     (conv) => conv.id === selectedConvId
   );
+
+  // Get the other user in the conversation (not the current user)
+  const otherUser = useMemo(() => {
+    if (!selectedConversation || !auth?.id) return null;
+    return selectedConversation.members.find((m) => m.id !== auth.id);
+  }, [selectedConversation, auth?.id]);
+
+  // Check if the other user is online
+  const isOtherUserOnline = useMemo(() => {
+    if (!otherUser?.id) return false;
+    return onlineUsers.includes(otherUser.id);
+  }, [otherUser?.id, onlineUsers]);
+
+  // Calculate online status text and color
+  const getOnlineStatus = () => {
+    if (!otherUser) return { text: "Select a conversation", color: "gray", dotColor: "gray" };
+    
+    if (isOtherUserOnline) {
+      return { 
+        text: "Online", 
+        color: "text-green-600", 
+        dotColor: "bg-green-500",
+        showIndicator: true
+      };
+    } else {
+      return { 
+        text: "Offline", 
+        color: "text-gray-500", 
+        dotColor: "bg-gray-400",
+        showIndicator: false
+      };
+    }
+  };
+
+  const onlineStatus = getOnlineStatus();
 
   // ------------------ LOADING & AUTH STATES ------------------
   if (authLoading || isLoading) {
@@ -120,6 +160,7 @@ export default function ChatPage() {
           conversations={conversations}
           selectedConvId={selectedConvId}
           onSelectConversation={(id) => dispatch(setSelectedConversation(id))}
+          // onlineUsers={onlineUsers}
         />
       </div>
 
@@ -134,20 +175,36 @@ export default function ChatPage() {
                   <div className="relative">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
                       <span className="text-white font-semibold text-lg">
-                        {selectedConversation.members
-                          .find((m) => m.id !== auth.id)
-                          ?.name?.charAt(0) || "U"}
+                        {otherUser?.name?.charAt(0) || "U"}
                       </span>
                     </div>
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                    {onlineStatus.showIndicator && (
+                      <div className={`absolute bottom-0 right-0 w-3 h-3 ${onlineStatus.dotColor} rounded-full border-2 border-white`}></div>
+                    )}
                   </div>
                   <div>
                     <h2 className="font-bold text-gray-800 text-lg">
-                      {selectedConversation.members.find(
-                        (m) => m.id !== auth.id
-                      )?.name || "Unknown User"}
+                      {otherUser?.name || "Unknown User"}
                     </h2>
-                    <p className="text-sm text-green-600 font-medium">Online</p>
+                    <div className="flex items-center gap-2">
+                      <p className={`text-sm font-medium ${onlineStatus.color}`}>
+                        {onlineStatus.text}
+                      </p>
+                      {!isOtherUserOnline && (
+                        <span className="text-xs text-gray-400">
+                          • Last seen recently
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Online users count indicator */}
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center">
+                    <div className="w-2 h-2 rounded-full bg-green-500 mr-1"></div>
+                    <span className="font-medium">{onlineUsers.length}</span>
+                    <span className="ml-1">online</span>
                   </div>
                 </div>
               </div>
@@ -183,6 +240,20 @@ export default function ChatPage() {
                   ? "Connect with your team members and start collaborating"
                   : "Select a conversation from the sidebar to start chatting"}
               </p>
+              
+              {/* Online users info */}
+              <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-200">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <span className="font-medium text-gray-700">
+                    {onlineUsers.length} user{onlineUsers.length !== 1 ? 's' : ''} online
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500">
+                  Real-time status updates
+                </p>
+              </div>
+              
               {conversations.length > 0 && (
                 <button
                   onClick={() => {

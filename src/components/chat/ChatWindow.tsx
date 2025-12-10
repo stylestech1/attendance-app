@@ -5,8 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useGetConversationMessagesQuery } from "@/redux/api/chatApi";
 import { useAppSelector } from "@/redux/store";
 import { Message } from "@/types/chat";
-import { format, formatDistanceToNow } from "date-fns";
-import { Check, CheckCheck, RefreshCw, Download, MoreVertical } from "lucide-react";
+import { format } from "date-fns";
+import { Check, CheckCheck, RefreshCw } from "lucide-react";
 import { useMarkMessagesSeen } from "./useMarkSeen";
 
 interface ChatWindowProps {
