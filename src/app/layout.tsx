@@ -4,8 +4,8 @@ import "./globals.css";
 import Proivder from "@/context/Proivder";
 import ReduxProvider from "@/redux/provider";
 import ChatButton from "@/components/chat/ChatButton";
-import NotificationBell from "@/components/notification/NotificationBell";
-import { ToastProvider } from "@/providers/ToastProvider";
+// import NotificationBell from "@/components/notification/NotificationBell";
+// import { ToastProvider } from "@/providers/ToastProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
