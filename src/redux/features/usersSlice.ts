@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 type UserProfile = {
   id: string;
@@ -24,14 +24,14 @@ const initialState: UsersState = {
 
 // Async thunk for fetching user profile data
 export const fetchUserProfile = createAsyncThunk(
-  'users/fetchUserProfile',
+  "users/fetchUserProfile",
   async (token: string, { rejectWithValue }) => {
     try {
       const apiURL = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(`${apiURL}/api/v1/userDashboard/getMyData`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
@@ -42,13 +42,15 @@ export const fetchUserProfile = createAsyncThunk(
         return rejectWithValue(data.message);
       }
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(
+        error instanceof Error ? error.message : String(error)
+      );
     }
   }
 );
 
 const usersSlice = createSlice({
-  name: 'users',
+  name: "users",
   initialState,
   reducers: {},
   extraReducers: (builder) => {

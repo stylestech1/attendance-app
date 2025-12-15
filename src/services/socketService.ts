@@ -4,6 +4,7 @@ import { Conversation, Message } from "@/types/chat";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Listener = (...args: any[]) => void;
 
 class SocketService {
