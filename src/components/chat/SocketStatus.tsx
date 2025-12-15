@@ -9,7 +9,7 @@ export default function SocketStatus() {
   const [isConnected, setIsConnected] = useState(false);
   const [socketId, setSocketId] = useState<string | null>(null);
   const token = useAppSelector((state: RootState) => state.auth.token);
-    const { isInitialized } = useChatSocket();
+    // const { isInitialized } = useChatSocket();
   
 
   // useEffect(() => {
