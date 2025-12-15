@@ -11,45 +11,45 @@ export default function SocketDebug() {
     events: [] as string[],
   });
 
-  useEffect(() => {
-    const socket = socketService.getSocket();
+  // useEffect(() => {
+  //   const socket = socketService.getSocket();
 
-    const handleConnect = () => {
-      console.log("✅ Socket Debug: Connected", socket?.id);
-      setStatus(prev => ({ ...prev, connected: true, id: socket?.id || null }));
-    };
+  //   const handleConnect = () => {
+  //     console.log("✅ Socket Debug: Connected", socket?.id);
+  //     setStatus(prev => ({ ...prev, connected: true, id: socket?.id || null }));
+  //   };
 
-    const handleDisconnect = () => {
-      console.log("🔌 Socket Debug: Disconnected");
-      setStatus(prev => ({ ...prev, connected: false, id: null }));
-    };
+  //   const handleDisconnect = () => {
+  //     console.log("🔌 Socket Debug: Disconnected");
+  //     setStatus(prev => ({ ...prev, connected: false, id: null }));
+  //   };
 
-    const handleAnyEvent = (eventName: string, ...args: Conversation[]) => {
-      console.log(`📡 Socket Debug: Event ${eventName}`, args);
-      setStatus(prev => ({
-        ...prev,
-        events: [eventName, ...prev.events.slice(0, 4)], // Keep last 5 events
-      }));
-    };
+  //   const handleAnyEvent = (eventName: string, ...args: Conversation[]) => {
+  //     console.log(`📡 Socket Debug: Event ${eventName}`, args);
+  //     setStatus(prev => ({
+  //       ...prev,
+  //       events: [eventName, ...prev.events.slice(0, 4)], // Keep last 5 events
+  //     }));
+  //   };
 
-    // Listen to all events
-    socket?.onAny(handleAnyEvent);
-    socket?.on("connect", handleConnect);
-    socket?.on("disconnect", handleDisconnect);
+  //   // Listen to all events
+  //   socket?.onAny(handleAnyEvent);
+  //   socket?.on("connect", handleConnect);
+  //   socket?.on("disconnect", handleDisconnect);
 
-    // Set initial state
-    setStatus({
-      connected: socket?.connected || false,
-      id: socket?.id || null,
-      events: [],
-    });
+  //   // Set initial state
+  //   setStatus({
+  //     connected: socket?.connected || false,
+  //     id: socket?.id || null,
+  //     events: [],
+  //   });
 
-    return () => {
-      socket?.offAny(handleAnyEvent);
-      socket?.off("connect", handleConnect);
-      socket?.off("disconnect", handleDisconnect);
-    };
-  }, []);
+  //   return () => {
+  //     socket?.offAny(handleAnyEvent);
+  //     socket?.off("connect", handleConnect);
+  //     socket?.off("disconnect", handleDisconnect);
+  //   };
+  // }, []);
 
   return (
     <div className="fixed bottom-20 left-4 z-50 bg-black/90 text-white p-3 rounded-lg text-xs max-w-sm">

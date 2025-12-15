@@ -56,7 +56,7 @@ const Summary = () => {
   useEffect(() => {
     if (!auth?.token) {
       console.log("No token found, redirecting to login");
-      router.replace("/login");
+      
       return;
     }
 

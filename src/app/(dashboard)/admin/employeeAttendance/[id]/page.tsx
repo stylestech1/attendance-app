@@ -73,7 +73,7 @@ const EmployeeAttendance = () => {
   useEffect(() => {
     if (!auth?.token) {
       console.log("No token found, redirecting to login");
-      router.replace("/login");
+
       return;
     }
 
@@ -454,7 +454,7 @@ const EmployeeAttendance = () => {
                           </div>
                           <div>
                             <div className="font-semibold text-gray-900">
-                              {record.date.split('T')[0]}
+                              {record.date.split("T")[0]}
                             </div>
                           </div>
                         </div>

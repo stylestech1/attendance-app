@@ -12,53 +12,53 @@ export default function SocketStatus() {
     const { isInitialized } = useChatSocket();
   
 
-  useEffect(() => {
-    if (!token) {
-      console.log("⏸️ No token, skipping socket connection");
-      return;
-    }
+  // useEffect(() => {
+  //   if (!token) {
+  //     console.log("⏸️ No token, skipping socket connection");
+  //     return;
+  //   }
 
-    const socket = socketService.getSocket();
+  //   const socket = socketService.getSocket();
 
-    const checkConnection = () => {
-      if (socket?.connected) {
-        console.log("✅ Socket is connected");
-        isInitialized.current = true;
-      } else {
-        console.log("⚠️ Socket initialized but not connected yet");
-        setTimeout(() => {
-          if (socket && !socket.connected) {
-            console.log("🔄 Attempting to reconnect socket...");
-            socket.connect();
-          }
-        }, 1000);
-      }
-    };
+  //   const checkConnection = () => {
+  //     if (socket?.connected) {
+  //       console.log("✅ Socket is connected");
+  //       isInitialized.current = true;
+  //     } else {
+  //       console.log("⚠️ Socket initialized but not connected yet");
+  //       setTimeout(() => {
+  //         if (socket && !socket.connected) {
+  //           console.log("🔄 Attempting to reconnect socket...");
+  //           socket.connect();
+  //         }
+  //       }, 1000);
+  //     }
+  //   };
 
-    checkConnection();
+  //   checkConnection();
 
-    const handleConnect = () => {
-      setIsConnected(true);
-      setSocketId(socket?.id || null);
-    };
+  //   const handleConnect = () => {
+  //     setIsConnected(true);
+  //     setSocketId(socket?.id || null);
+  //   };
 
-    const handleDisconnect = () => {
-      setIsConnected(false);
-      setSocketId(null);
-    };
+  //   const handleDisconnect = () => {
+  //     setIsConnected(false);
+  //     setSocketId(null);
+  //   };
 
-    socket?.on("connect", handleConnect);
-    socket?.on("disconnect", handleDisconnect);
+  //   socket?.on("connect", handleConnect);
+  //   socket?.on("disconnect", handleDisconnect);
 
-    // Set initial state
-    setIsConnected(socket?.connected || false);
-    setSocketId(socket?.id || null);
+  //   // Set initial state
+  //   setIsConnected(socket?.connected || false);
+  //   setSocketId(socket?.id || null);
 
-    return () => {
-      socket?.off("connect", handleConnect);
-      socket?.off("disconnect", handleDisconnect);
-    };
-  }, []);
+  //   return () => {
+  //     socket?.off("connect", handleConnect);
+  //     socket?.off("disconnect", handleDisconnect);
+  //   };
+  // }, []);
 
   return (
     <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 bg-black/80 text-white px-3 py-1 rounded-full text-sm">

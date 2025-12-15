@@ -119,35 +119,31 @@ export default function NotificationBell() {
     };
   }, [hasUserInteracted]);
 
-  useEffect(() => {
-    if (!token) return;
+  // useEffect(() => {
+  //   if (!token) return;
 
-    console.log("🚀 Initializing WebSocket connection...");
+  //   console.log("🚀 Initializing WebSocket connection...");
 
-    notificationService.initialize();
+  //   notificationService.initialize();
 
-    const socket = socketService.initialize(token);
+  //   const socket = socketService.initialize(token);
 
-    const updateConnectionStatus = () => {
-      setSocketConnected(socketService.isConnected());
-    };
+  //   socket?.on("connect", () => {
+  //     console.log("✅ WebSocket connected");
+  //     setSocketConnected(true);
+  //     setLastUpdateTime(new Date());
+  //   });
 
-    socket?.on("connect", () => {
-      console.log("✅ WebSocket connected");
-      setSocketConnected(true);
-      setLastUpdateTime(new Date());
-    });
+  //   socket?.on("disconnect", () => {
+  //     console.log("🔌 WebSocket disconnected");
+  //     setSocketConnected(false);
+  //   });
 
-    socket?.on("disconnect", () => {
-      console.log("🔌 WebSocket disconnected");
-      setSocketConnected(false);
-    });
-
-    return () => {
-      socket?.off("connect");
-      socket?.off("disconnect");
-    };
-  }, [token]);
+  //   return () => {
+  //     socket?.off("connect");
+  //     socket?.off("disconnect");
+  //   };
+  // }, [token]);
 
   useEffect(() => {
     if (!token) return;

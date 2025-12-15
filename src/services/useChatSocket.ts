@@ -1,186 +1,229 @@
 "use client";
+
+import { useEffect, useRef } from "react";
+import { useAppDispatch, useAppSelector } from "@/redux/store";
 import {
   addLiveMessage,
   markMessageSeenLocal,
   setTyping,
-  setUserOffline,
   setUserOnline,
-  addConversationLocal,
+  setUserOffline,
   setOnlineUsers,
+  addConversationLocal,
 } from "@/redux/features/chatSlice";
-import { RootState, useAppDispatch, useAppSelector } from "@/redux/store";
-import { useEffect, useRef, useState } from "react";
-import { socketService } from "./socketService";
+import { socketService } from "@/services/socketService";
 import { SOCKET_EVENTS } from "@/constants/socketEvents";
 import { Message, Conversation } from "@/types/chat";
 import { useAuth } from "@/context/AuthContext";
 
+/* -------------------------------------------------------------------------- */
+/*                                useChatSocket                                */
+/* -------------------------------------------------------------------------- */
+
 export const useChatSocket = () => {
   const dispatch = useAppDispatch();
-  const token = useAppSelector((state: RootState) => state.auth.token);
-  const isInitialized = useRef(false);
+  const listenersAttached = useRef(false);
   const { auth } = useAuth();
 
-  // Connect socket when token changes
+  /* -------------------------------------------------------------------------- */
+  /*                    REDUX → REF (BRIDGE)                                    */
+  /* -------------------------------------------------------------------------- */
+
+  const selectedConversationId = useAppSelector(
+    (state) => state.chat.selectedConversationId
+  );
+
+  const selectedConversationIdRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (!token) {
-      console.log("⏸️ No token, skipping socket connection");
-      return;
-    }
+    selectedConversationIdRef.current = selectedConversationId;
+  }, [selectedConversationId]);
 
-    const socket = socketService.initialize(token);
+  /* -------------------------------------------------------------------------- */
+  /*                             REGISTER LISTENERS                              */
+  /* -------------------------------------------------------------------------- */
 
-    const handleConnect = () => {
-      console.log("✅ useChatSocket: Socket connected");
-      isInitialized.current = true;
-      socket.emit(SOCKET_EVENTS.USER_ONLINE, { userId: auth.id });
-      socket.emit(SOCKET_EVENTS.PRESENCE_LIST, {});
-    };
+  useEffect(() => {
+    const socket = socketService.getSocket();
+    if (!socket || listenersAttached.current) return;
 
-    const handleDisconnect = () => {
-      console.log("🔌 useChatSocket: Socket disconnected");
-      isInitialized.current = false;
-    };
+    listenersAttached.current = true;
 
-    // --------------------- SOCKET EVENTS ---------------------
+    /* ---------------------------- MESSAGES ---------------------------- */
 
-    // 📩 New message
-    socket.on(SOCKET_EVENTS.NEW_MESSAGE, (msg: Message) => {
-      console.log("📨 New message received via socket:", msg);
-      dispatch(addLiveMessage(msg));
-    });
+    const offNewMessage = socketService.on(
+      SOCKET_EVENTS.NEW_MESSAGE,
+      (msg: Message) => {
+        console.log("📩 New message received:", msg);
+        dispatch(addLiveMessage(msg));
+      }
+    );
 
-    // 👀 Message Seen
-    socket.on(
-      SOCKET_EVENTS.MARK_SEEN,
+    /* ---------------------------- SEEN STATUS -------------------------- */
+
+    const offSeenUpdate = socketService.on(
+      SOCKET_EVENTS.SEEN_UPDATE,
       ({ conversationId }: { conversationId: string }) => {
-        console.log("👀 Message seen for conversation:", conversationId);
+        console.log("👁️ Messages seen in conversation:", conversationId);
         dispatch(markMessageSeenLocal(conversationId));
       }
     );
 
-    // ✍ Typing
-    socket.on(
-      SOCKET_EVENTS.TYPING,
+    const offSeenAck = socketService.on(
+      SOCKET_EVENTS.SEEN_ACKNOWLEDGED,
       ({ conversationId }: { conversationId: string }) => {
-        console.log("✍️ Typing in conversation:", conversationId);
-        dispatch(setTyping({ conversationId, isTyping: true }));
+        console.log("✅ Seen acknowledged for conversation:", conversationId);
+        dispatch(markMessageSeenLocal(conversationId));
       }
     );
 
-    // 🤚 Stop Typing
-    socket.on(
+    // ---------------------------- TYPING -------------------------------
+
+    const offTyping = socketService.on(
+      SOCKET_EVENTS.TYPING,
+      ({ userId }: { userId: string }) => {
+        const conversationId = selectedConversationIdRef.current;
+
+        console.log(
+          "⌨️ User typing:",
+          userId,
+          "in conversation:",
+          conversationId
+        );
+
+        if (!conversationId) return;
+
+        dispatch(setTyping({ conversationId, isTyping: true }));
+
+        setTimeout(() => {
+          dispatch(setTyping({ conversationId, isTyping: false }));
+        }, 3000);
+      }
+    );
+
+    const offStopTyping = socketService.on(
       SOCKET_EVENTS.STOP_TYPING,
-      ({ conversationId }: { conversationId: string }) => {
-        console.log("🤚 Stopped typing in conversation:", conversationId);
+      ({ userId, auto }: { userId: string; auto: boolean }) => {
+        const conversationId = selectedConversationIdRef.current;
+
+        console.log(
+          "🛑 User stopped typing:",
+          userId,
+          "in conversation:",
+          conversationId,
+          "auto:",
+          auto
+        );
+
+        if (!conversationId) return;
+
         dispatch(setTyping({ conversationId, isTyping: false }));
       }
     );
 
-    // 🟢 User Online
-    socket.on(SOCKET_EVENTS.USER_ONLINE, ({ userId }: { userId: string }) => {
-      console.log("🟢 User online:", userId);
-      dispatch(setUserOnline({ userId }));
-      dispatch((dispatch, getState) => {
-        const currentOnlineUsers = getState().chat.onlineUsers;
-        if (!currentOnlineUsers.includes(userId)) {
-          dispatch(setOnlineUsers([...currentOnlineUsers, userId]));
-        }
-      });
-    });
+    /* ---------------------------- PRESENCE ----------------------------- */
 
-    // 🔴 User Offline
-    socket.on(SOCKET_EVENTS.USER_OFFLINE, ({ userId }: { userId: string }) => {
-      console.log("🔴 User offline:", userId);
-      dispatch(setUserOffline({ userId }));
-      dispatch((dispatch, getState) => {
-        const currentOnlineUsers = getState().chat.onlineUsers;
-        dispatch(
-          setOnlineUsers(currentOnlineUsers.filter((id) => id !== userId))
-        );
-      });
-    });
+    const offUserOnline = socketService.on(
+      SOCKET_EVENTS.USER_ONLINE,
+      ({ userId }: { userId: string }) => {
+        console.log("🟢 User online:", userId);
+        dispatch(setUserOnline({ userId }));
+      }
+    );
 
-    // 📄 User Status
-    socket.on(
+    const offUserOffline = socketService.on(
+      SOCKET_EVENTS.USER_OFFLINE,
+      ({ userId, lastSeen }: { userId: string; lastSeen?: string }) => {
+        console.log("🔴 User offline:", userId);
+        dispatch(setUserOffline({ userId, lastSeen }));
+      }
+    );
+
+    const offPresenceList = socketService.on(
       SOCKET_EVENTS.PRESENCE_LIST,
       (data: { userId: string; isOnline: boolean; lastSeen?: string }[]) => {
-        console.log("📋 Presence list received:", data);
-
-        const onlineUsers = data
-          .filter((user) => user.isOnline)
-          .map((user) => user.userId);
-
+        console.log("📋 Presence list received:", data, "users");
+        const onlineUsers = data.filter((u) => u.isOnline).map((u) => u.userId);
         dispatch(setOnlineUsers(onlineUsers));
       }
     );
 
-    // 🔄 New conversation created
-    socket.on("newConversation", (conversation: Conversation) => {
-      console.log("🆕 New conversation via socket:", conversation);
-      dispatch(addConversationLocal(conversation));
-    });
+    /* -------------------------- CONVERSATIONS -------------------------- */
 
-    // --------------------- CONNECTION HANDLERS ---------------------
+    const offConversationJoined = socketService.on(
+      SOCKET_EVENTS.CONVERSATION_JOINED,
+      ({ conversationId }: { conversationId: string }) => {
+        console.log("🤝 Joined conversation:", conversationId);
+      }
+    );
 
-    socket.on("connect", handleConnect);
-    socket.on("disconnect", handleDisconnect);
+    const offConversationLeft = socketService.on(
+      SOCKET_EVENTS.CONVERSATION_LEFT,
+      ({ conversationId }: { conversationId: string }) => {
+        console.log("👋 Left conversation:", conversationId);
+      }
+    );
 
-    // --------------------- CLEANUP ---------------------
+    /* ------------------------------ ERRORS ------------------------------ */
+
+    const offSocketError = socketService.on(
+      SOCKET_EVENTS.SOCKET_ERROR,
+      (error: unknown) => {
+        console.error("🚨 Socket error:", error);
+      }
+    );
+
+    /* ----------------------------- CLEANUP ----------------------------- */
 
     return () => {
-      console.log("🧹 Cleaning up socket listeners");
-      socket.off(SOCKET_EVENTS.NEW_MESSAGE);
-      socket.off(SOCKET_EVENTS.MARK_SEEN);
-      socket.off(SOCKET_EVENTS.TYPING);
-      socket.off(SOCKET_EVENTS.STOP_TYPING);
-      socket.off(SOCKET_EVENTS.USER_ONLINE);
-      socket.off(SOCKET_EVENTS.USER_OFFLINE);
-      socket.off(SOCKET_EVENTS.PRESENCE_LIST);
-      socket.off("newConversation");
-      socket.off("connect", handleConnect);
-      socket.off("disconnect", handleDisconnect);
+      console.log("🧹 Cleaning up chat socket listeners...");
+      listenersAttached.current = false;
+
+      offNewMessage();
+      offSeenUpdate();
+      offSeenAck();
+      offTyping();
+      offStopTyping();
+      offUserOnline();
+      offUserOffline();
+      offPresenceList();
+      offConversationJoined();
+      offConversationLeft();
+      offSocketError();
     };
-  }, [dispatch, token]);
+  }, [dispatch, auth.id]);
 
-  // --------------------- HELPER FUNCTIONS ---------------------
-  const joinConversation = (conversationId: string) => {
-    if (!isInitialized.current) return;
-    socketService.emit(SOCKET_EVENTS.JOIN_CONVERSATION, { conversationId });
-  };
-
-  const sendMessage = (conversationId: string, text: string) => {
-    if (!isInitialized.current) return;
-    socketService.emit(SOCKET_EVENTS.SEND_MESSAGE, { conversationId, text });
-  };
-
-  const markSeen = (conversationId: string) => {
-    if (!isInitialized.current) return;
-    socketService.emit(SOCKET_EVENTS.MARK_SEEN, { conversationId });
-  };
-
-  const startTyping = (conversationId: string) => {
-    if (!isInitialized.current) return;
-    socketService.emit(SOCKET_EVENTS.TYPING, { conversationId });
-  };
-
-  const stopTyping = (conversationId: string) => {
-    if (!isInitialized.current) return;
-    socketService.emit(SOCKET_EVENTS.STOP_TYPING, { conversationId });
-  };
-
-  const getPresenceList = () => {
-    if (!isInitialized.current) return;
-    socketService.emit(SOCKET_EVENTS.PRESENCE_LIST, {});
-  };
+  /* -------------------------------------------------------------------------- */
+  /*                              EMIT HELPERS                                  */
+  /* -------------------------------------------------------------------------- */
 
   return {
-    isInitialized,
-    joinConversation,
-    sendMessage,
-    markSeen,
-    startTyping,
-    stopTyping,
-    getPresenceList,
+    joinConversation: (conversationId: string) => {
+      // selectedConversationId = conversationId;
+      socketService.joinConversation(conversationId);
+    },
+
+    leaveConversation: (conversationId: string) => {
+      if (selectedConversationId === conversationId) {
+        // selectedConversationId = null;
+      }
+      socketService.leaveConversation(conversationId);
+    },
+
+    sendMessage: (conversationId: string, text: string) =>
+      socketService.sendMessage(conversationId, text),
+
+    markSeen: (conversationId: string) =>
+      socketService.markSeen(conversationId),
+
+    startTyping: (conversationId: string) =>
+      socketService.startTyping(conversationId),
+
+    stopTyping: (conversationId: string) =>
+      socketService.stopTyping(conversationId),
+
+    getPresenceList: () => socketService.getPresenceList(),
+
+    ping: () => socketService.emit(SOCKET_EVENTS.PING),
   };
 };

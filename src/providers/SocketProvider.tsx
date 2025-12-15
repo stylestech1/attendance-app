@@ -15,12 +15,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     
     console.log("🚀 Initializing socket in SocketProvider");
     socketService.initialize(token);
-    notificationService.initialize();
+    // notificationService.initialize();
     
     return () => {
       console.log("🔌 Disconnecting socket from SocketProvider");
       socketService.disconnect();
-      notificationService.cleanup();
+      // notificationService.cleanup();
     };
   }, [token]);
   

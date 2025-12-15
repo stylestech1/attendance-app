@@ -1,24 +1,24 @@
 "use client";
+
 import { useAuth } from "@/context/AuthContext";
 import {
   useCreateOrGetConversationMutation,
   useGetAllUserQuery,
 } from "@/redux/api/chatApi";
-import { RootState, useAppSelector } from "@/redux/store";
+import { fetchUserProfile } from "@/redux/features/usersSlice";
+import { RootState, useAppDispatch, useAppSelector } from "@/redux/store";
 import { useChatSocket } from "@/services/useChatSocket";
 import { Conversation } from "@/types/chat";
-import { formatDistanceToNow } from "date-fns";
+import { formatLastSeen } from "@/utils/formatLastSeen";
 import {
   Search,
   MessageSquare,
   Users,
   LogOut,
   MessageCircle,
-  UserPlus,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
 
 interface ChatSidebarProps {
   conversations: Conversation[];
@@ -26,373 +26,281 @@ interface ChatSidebarProps {
   onSelectConversation: (id: string | null) => void;
 }
 
-// Types
-type TProfile = {
-  id: string;
-  jobId: number;
-  name: string;
-  email: string;
-  position: string;
-  phone: string;
-  role: string;
-};
-
 export default function ChatSidebar({
   conversations,
   selectedConvId,
   onSelectConversation,
 }: ChatSidebarProps) {
+  const router = useRouter();
+  const { auth, logout } = useAuth();
+  const dispatch = useAppDispatch();
+
+  /* ===================== LOCAL UI STATE ===================== */
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"conversations" | "users">(
     "conversations"
   );
-  const router = useRouter();
-  const { auth, logout } = useAuth();
+
+  /* ===================== REDUX STATE ===================== */
+  const { profile, loading: profileLoading } = useAppSelector(
+    (state: RootState) => state.users
+  );
+
   const onlineUsers = useAppSelector(
     (state: RootState) => state.chat.onlineUsers
   );
+
+  const getConvId = (conv: Conversation) => conv.id;
+
+  const unreadCounts = useAppSelector(
+    (state: RootState) => state.chat.unreadCounts
+  );
+
+  /* ===================== SOCKET ===================== */
   const { getPresenceList } = useChatSocket();
-  const [profile, setProfile] = useState<TProfile | null>(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (getPresenceList) {
-      getPresenceList();
-    }
+    getPresenceList?.();
   }, [getPresenceList]);
 
-  // API Hooks
+  /* -------------------- FETCH PROFILE -------------------- */
+  useEffect(() => {
+    if (!auth?.token) return;
+    dispatch(fetchUserProfile(auth.token));
+  }, [auth?.token, dispatch]);
+
+  /* ===================== API ===================== */
   const { data: allUsers = [], isLoading: usersLoading } = useGetAllUserQuery();
+
   const [createConversation] = useCreateOrGetConversationMutation();
 
   const conversationsArray = Array.isArray(conversations) ? conversations : [];
 
-  // Fetching Information
-  useEffect(() => {
-    if (!auth?.token) {
-      console.log("No token found, redirecting to login");
-      return;
-    }
-
-    const apiURL = process.env.NEXT_PUBLIC_API_URL;
-
-    const getInfoData = async () => {
-      try {
-        setLoading(false);
-        const res = await fetch(`${apiURL}/api/v1/userDashboard/getMyData`, {
-          method: "GET",
-          headers: {
-            "Content-type": "application/json",
-            Authorization: `Bearer ${auth.token}`,
-          },
-        });
-        const result = await res.json();
-        if (res.ok) {
-          setProfile(result.data);
-        } else {
-          toast.error(result.message, {
-            style: { background: "#dc2626", color: "#fff" },
-          });
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          toast.error(error.message, {
-            style: { background: "#dc2626", color: "#fff" },
-          });
-        }
-        logout();
-      } finally {
-        setLoading(false);
-      }
-    };
-    getInfoData();
-  }, [auth.token, logout, router]);
-
-  // Filter Conversation
-
+  /* ===================== FILTERS ===================== */
   const filteredConversations = conversationsArray.filter((conv) =>
     conv.members.some((member) =>
       member.name?.toLowerCase().includes(search.toLowerCase())
     )
   );
 
-  // Filter users (exclude current user)
   const filteredUsers = allUsers.filter((user) => {
+    if (!profile) return false;
     const matchesSearch =
       user.name.toLowerCase().includes(search.toLowerCase()) ||
       user.email.toLowerCase().includes(search.toLowerCase());
-    return user.id !== auth.id && matchesSearch;
+
+    return user.id !== profile.id && matchesSearch;
   });
 
-  // Is Online
-  const isUserOnline = (userId: string) => {
-    return onlineUsers.includes(userId);
-  };
+  /* ===================== HELPERS ===================== */
+  const isUserOnline = (userId: string) => onlineUsers.includes(userId);
 
-  // Start new conversation with user
+  const hasConversationWithUser = (userId: string) =>
+    conversationsArray.some((conv) =>
+      conv.members.some((member) => member.id === userId)
+    );
+
   const handleStartNewChat = async (userId: string) => {
     try {
       const result = await createConversation({ userId }).unwrap();
-      onSelectConversation(result.id);
+      const convId = result.id;
+
+      if (!convId) {
+        console.error("CreateConversation returned no id", result);
+        return;
+      }
+
+      onSelectConversation(convId);
+
       setActiveTab("conversations");
-    } catch (error) {
-      console.error("Failed to create conversation:", error);
+    } catch (err) {
+      console.error("Create conversation failed", err);
     }
   };
 
-  // Check if user already has conversation
-  const hasConversationWithUser = (userId: string) => {
-    return conversationsArray.some((conv) =>
-      conv.members.some((member) => member.id === userId)
+  /* ===================== LOADING ===================== */
+  if (profileLoading || !profile) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <span className="animate-spin w-8 h-8 rounded-full border-4 border-blue-500 border-t-transparent" />
+      </div>
     );
-  };
+  }
 
+  /* ===================== UI ===================== */
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
+      {/* ================= HEADER ================= */}
       <div className="p-4 border-b flex items-start justify-between">
-        <div className="text-xl font-bold flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center">
             <span className="text-white font-semibold">
-              {profile?.name.charAt(0) || "U"}
+              {profile.name.charAt(0)}
             </span>
           </div>
           <div>
-            {profile && (
-              <h1 className="text-blue-600">{profile.name.split(" ")[0]}</h1>
-            )}
-            <div className="flex items-center gap-1">
-              <div
-                className={`w-2 h-2 rounded-full ${
-                  true ? "bg-green-500" : "bg-gray-400"
-                }`}
-              ></div>
-              <p className="text-xs text-gray-500 capitalize">
-                {profile?.position}
-              </p>
-            </div>
+            <h1 className="font-semibold text-blue-600">
+              {profile.name.split(" ")[0]}
+            </h1>
+            <p className="text-xs text-gray-500 capitalize">
+              {profile.position}
+            </p>
           </div>
         </div>
 
         <button
-          onClick={router.back}
-          className="cursor-pointer p-2 rounded-full hover:bg-blue-300 transition-colors duration-200"
+          onClick={() => router.back()}
+          className="p-2 rounded-full hover:bg-gray-100"
         >
           <LogOut />
         </button>
       </div>
 
-      {/* Tabs */}
+      {/* ================= TABS ================= */}
       <div className="flex border-b">
         <button
-          className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
-            activeTab === "conversations"
-              ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
-              : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-          }`}
           onClick={() => setActiveTab("conversations")}
+          className={`flex-1 py-3 flex items-center justify-center gap-2 text-sm ${
+            activeTab === "conversations"
+              ? "border-b-2 border-blue-600 text-blue-600 bg-blue-50"
+              : "text-gray-500"
+          }`}
         >
           <MessageCircle className="w-4 h-4" />
           Conversations ({conversationsArray.length})
         </button>
+
         <button
-          className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
-            activeTab === "users"
-              ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
-              : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-          }`}
           onClick={() => setActiveTab("users")}
+          className={`flex-1 py-3 flex items-center justify-center gap-2 text-sm ${
+            activeTab === "users"
+              ? "border-b-2 border-blue-600 text-blue-600 bg-blue-50"
+              : "text-gray-500"
+          }`}
         >
           <Users className="w-4 h-4" />
-          All Users ({allUsers.length - 1})
+          Users ({allUsers.length - 1})
         </button>
       </div>
 
-      {/* Search */}
+      {/* ================= SEARCH ================= */}
       <div className="p-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
-            type="text"
-            placeholder={`Search by Name`}
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search..."
+            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
 
-      {/* Content Area */}
+      {/* ================= CONTENT ================= */}
       <div className="flex-1 overflow-y-auto">
         {activeTab === "conversations" ? (
-          // CONVERSATIONS TAB
-          conversationsArray.length === 0 ? (
+          filteredConversations.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
               <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="font-medium mb-2">No conversations yet</h3>
-              <p className="text-sm mb-4">
-                Start a conversation with your team members
-              </p>
-              <button
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                onClick={() => setActiveTab("users")}
-              >
-                Find People
-              </button>
-            </div>
-          ) : filteredConversations.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">
-              <Search className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-              <p>No matching conversations</p>
+              No conversations
             </div>
           ) : (
-            filteredConversations.map((conversation) => {
-              const otherMember = conversation.members.find(
-                (m) => m.id !== auth.id
-              );
-              const isSelected = selectedConvId === conversation.id;
-              const isOtherUserOnline = otherMember
-                ? isUserOnline(otherMember.id)
-                : false;
+            filteredConversations.map((conv) => {
+              const otherUser = conv.members.find((m) => m.id !== profile.id);
+              const convId = getConvId(conv);
+              const isSelected = selectedConvId === convId;
+              const unread = unreadCounts[convId] || 0;
 
               return (
                 <div
-                  key={conversation.id}
-                  className={`p-4 border-b cursor-pointer transition-colors hover:bg-gray-50 ${
-                    isSelected ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
+                  key={convId}
+                  onClick={() => {
+                    if (!convId) return;
+                    onSelectConversation(convId);
+                  }}
+                  className={`p-4 border-b cursor-pointer hover:bg-gray-50 flex justify-between items-center ${
+                    isSelected || unread > 0
+                      ? "bg-blue-50 border-l-4 border-blue-600"
+                      : ""
                   }`}
-                  onClick={() => onSelectConversation(conversation.id)}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3">
-                      {/* Avatar */}
-                      <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <span className="text-blue-600 font-semibold">
-                            {otherMember?.name?.charAt(0) || "U"}
-                          </span>
-                        </div>
-                        {/* Online */}
-                        <div
-                          className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
-                            isOtherUserOnline ? "bg-green-500" : "bg-gray-400"
-                          }`}
-                          title={
-                            isOtherUserOnline
-                              ? `Online (Last seen: ${new Date().toLocaleTimeString()})`
-                              : "Offline"
-                          }
-                        ></div>
+                  <div className="flex gap-3">
+                    <div className="relative">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        {otherUser?.name?.charAt(0) || "U"}
+                      </div>
+                      <span
+                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+                          otherUser && isUserOnline(otherUser.id)
+                            ? "bg-green-500"
+                            : "bg-gray-400"
+                        }`}
+                      />
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <h3 className="font-semibold truncate">
+                          {otherUser?.name || "Unknown"}
+                        </h3>
                       </div>
 
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold text-gray-900 truncate">
-                            {otherMember?.name || "Unknown User"}
-                          </h3>
-                          {conversation.updatedAt && (
-                            <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
-                              {formatDistanceToNow(
-                                new Date(conversation.updatedAt),
-                                {
-                                  addSuffix: true,
-                                }
-                              )}
-                            </span>
-                          )}
-                        </div>
-
-                        {conversation.lastMessage && (
-                          <p className="text-sm text-gray-600 truncate mt-1">
-                            {conversation.lastMessage.text || "📎 Attachment"}
-                          </p>
-                        )}
-                      </div>
+                      {conv.lastMessage && (
+                        <p className="text-sm text-gray-600 truncate">
+                          {conv.lastMessage.text}
+                        </p>
+                      )}
                     </div>
                   </div>
+
+                  {unread > 0 && (
+                    <span className="ml-2 px-2 py-0.5 bg-blue-500 text-white rounded-full text-xs">
+                      {unread}
+                    </span>
+                  )}
                 </div>
               );
             })
           )
-        ) : // USERS TAB
-        usersLoading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="mt-4 text-gray-500">Loading users...</p>
-          </div>
-        ) : filteredUsers.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-            <h3 className="font-medium mb-2">No users found</h3>
-            <p className="text-sm">Try a different search term</p>
-          </div>
+        ) : usersLoading ? (
+          <div className="p-8 text-center">Loading users…</div>
         ) : (
-          filteredUsers
-            .map((user) => {
-              const hasExistingChat = hasConversationWithUser(user.id);
-              const isOnline = isUserOnline(user.id);
-              return (
-                <div
-                  key={user.id}
-                  className="p-4 border-b hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      {/* Avatar */}
-                      <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <span className="text-blue-600 font-semibold">
-                            {user.name.charAt(0)}
-                          </span>
-                        </div>
-                        {/* Online */}
-                        <div
-                          className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
-                            isOnline ? "bg-green-500" : "bg-gray-400"
-                          }`}
-                          title={isOnline ? "Online" : "Offline"}
-                        ></div>
-                      </div>
+          filteredUsers.map((user) => {
+            const hasChat = hasConversationWithUser(user.id);
 
-                      {/* User Info */}
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-gray-900">
-                            {user.name}
-                          </h3>
-                        </div>
-                        <p className="text-sm text-gray-500 truncate max-w-[150px]">
-                          {user.position}
-                        </p>
-                      </div>
+            return (
+              <div key={user.id} className="p-4 border-b flex justify-between">
+                <div className="flex gap-3">
+                  <div className="relative">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      {user.name.charAt(0)}
                     </div>
-
-                    {/* Action Button */}
-                    <button
-                      onClick={() => handleStartNewChat(user.id)}
-                      className={`px-3 py-1.5 text-sm rounded-lg flex items-center gap-2 transition-colors ${
-                        hasExistingChat
-                          ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          : "bg-blue-500 text-white hover:bg-blue-600"
+                    <span
+                      className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+                        isUserOnline(user.id) ? "bg-green-500" : "bg-gray-400"
                       }`}
-                    >
-                      {hasExistingChat ? (
-                        <>
-                          <MessageSquare className="w-4 h-4" />
-                          Open Chat
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus className="w-4 h-4" />
-                          Message
-                        </>
-                      )}
-                    </button>
+                    />
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold">{user.name}</h3>
+                    <p className="text-xs text-gray-500">{user.position}</p>
                   </div>
                 </div>
-              );
-            })
+
+                <button
+                  onClick={() => handleStartNewChat(user.id)}
+                  className={`px-3 py-1.5 rounded-lg text-sm ${
+                    hasChat
+                      ? "bg-gray-100 text-gray-700"
+                      : "bg-blue-500 text-white"
+                  }`}
+                >
+                  {hasChat ? "Open Chat" : "Message"}
+                </button>
+              </div>
+            );
+          })
         )}
       </div>
     </div>

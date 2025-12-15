@@ -8,15 +8,10 @@ export type UserMini = {
 export type Conversation = {
   id: string;
   members: UserMini[];
-  lastMessage?: {
-    text?: string;
-    sender?: UserMini | null;
-    createdAt?: string;
-    seen?: boolean;
-  } | null;
+  lastMessage?: Message | null;
   createdAt: string;
   updatedAt: string;
-  messages?: Message[];
+  messages?: Message[]; 
   unreadCount?: number;
 };
 
@@ -42,3 +37,10 @@ export type ApiResponse<T> = {
 export type MarkSeenResponse = {
   message: string;
 };
+
+export interface Presence {
+  [userId: string]: {
+    isOnline: boolean;
+    lastSeen?: string;
+  };
+}
