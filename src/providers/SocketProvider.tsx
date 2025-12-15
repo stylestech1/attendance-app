@@ -2,7 +2,7 @@
 import { socketService } from "@/services/socketService";
 import { useAppSelector } from "@/redux/store";
 import { useEffect } from "react";
-import { notificationService } from "@/services/notificationService";
+// import { notificationService } from "@/services/notificationService";
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
   const token = useAppSelector((state) => state.auth.token);
