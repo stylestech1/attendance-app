@@ -9,6 +9,9 @@ import {
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { setToken } from "@/redux/features/authSlice";
+import { setFCMToken } from "@/redux/features/notificationSlice";
+import { generateFCMToken } from "@/firesbase/firebase";
+import { useSaveFCMTokenMutation } from "@/redux/api/notificationApi";
 
 // Types
 type Role = "admin" | "employee" | null;
@@ -46,6 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     id: null,
   });
   const dispatch = useDispatch();
+  const [saveFCMToken] = useSaveFCMTokenMutation()
 
   const TOKEN_KEY = "employeeSystem_auth_token";
 
@@ -90,6 +94,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(TOKEN_KEY, JSON.stringify(payload));
     setAuth(payload);
     dispatch(setToken(token));
+    generateFCMToken().then((fcmToken) => {
+      if (fcmToken) saveFCMToken({ fcmToken });
+    });
 
     if (role === "admin") {
       router.push("/admin");
@@ -107,6 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAuth({ token: null, role: null, id: null });
     router.push("/login");
     dispatch(setToken(null));
+    dispatch(setFCMToken(null));
   };
 
   return (

@@ -4,8 +4,8 @@ import "./globals.css";
 import Proivder from "@/context/Proivder";
 import ReduxProvider from "@/redux/provider";
 import ChatButton from "@/components/chat/ChatButton";
-// import NotificationBell from "@/components/notification/NotificationBell";
-// import { ToastProvider } from "@/providers/ToastProvider";
+import FCMProvider from "@/providers/FCMProvider";
+import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,10 +35,11 @@ export default function RootLayout({
       >
         <ReduxProvider>
           <Proivder>
-            {/* <NotificationBell /> */}
-            {/* <ToastProvider /> */}
-            {children}
-            <ChatButton />
+            <FCMProvider>
+              {children}
+              <ChatButton />
+              <Toaster position="top-center" />
+            </FCMProvider>
           </Proivder>
         </ReduxProvider>
       </body>

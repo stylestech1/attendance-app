@@ -1,11 +1,11 @@
 "use client";
 import { configureStore } from "@reduxjs/toolkit";
 import { useDispatch, useSelector } from "react-redux";
-import chatSlice from "./features/chatSlice";
 import authSlice from "./features/authSlice";
 import usersReducer from "./features/usersSlice";
-import notificationsSlice from "./features/notificationSlice";
+import chatSlice from "./features/chatSlice";
 import { chatApi } from "./api/chatApi";
+import notificationsSlice from "./features/notificationSlice";
 import { notificationApi } from "./api/notificationApi";
 
 export const store = configureStore({
