@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 import { SOCKET_EVENTS } from "@/constants/socketEvents";
-import { Conversation, Message } from "@/types/chat";
+import { Conversation } from "@/types/chat";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
 
@@ -51,7 +51,9 @@ class SocketService {
     this.socket.on(SOCKET_EVENTS.CONNECT, () => {
       console.log("✅ Socket connected:", this.socket?.id);
       this.emitInternal(SOCKET_EVENTS.USER_ONLINE, {});
-      this.emitInternal(SOCKET_EVENTS.PRESENCE_LIST, {});
+      setTimeout(() => {
+        this.emitInternal(SOCKET_EVENTS.PRESENCE_LIST, {});
+      }, 300);
     });
 
     this.socket.on(SOCKET_EVENTS.DISCONNECT, (reason) => {

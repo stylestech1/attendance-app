@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
 import {
@@ -9,11 +8,11 @@ import {
   setUserOnline,
   setUserOffline,
   setOnlineUsers,
-  addConversationLocal,
+  setUserPresence,
 } from "@/redux/features/chatSlice";
 import { socketService } from "@/services/socketService";
 import { SOCKET_EVENTS } from "@/constants/socketEvents";
-import { Message, Conversation } from "@/types/chat";
+import { Message } from "@/types/chat";
 import { useAuth } from "@/context/AuthContext";
 
 /* -------------------------------------------------------------------------- */
@@ -23,6 +22,7 @@ import { useAuth } from "@/context/AuthContext";
 export const useChatSocket = () => {
   const dispatch = useAppDispatch();
   const listenersAttached = useRef(false);
+  const lastSocketId = useRef<string | null>(null);
   const { auth } = useAuth();
 
   /* -------------------------------------------------------------------------- */
@@ -45,9 +45,8 @@ export const useChatSocket = () => {
 
   useEffect(() => {
     const socket = socketService.getSocket();
-    if (!socket || listenersAttached.current) return;
-
-    listenersAttached.current = true;
+    if (!socket || lastSocketId.current === socket.id) return;
+    lastSocketId.current = socket.id || null;
 
     /* ---------------------------- MESSAGES ---------------------------- */
 
@@ -142,9 +141,17 @@ export const useChatSocket = () => {
     const offPresenceList = socketService.on(
       SOCKET_EVENTS.PRESENCE_LIST,
       (data: { userId: string; isOnline: boolean; lastSeen?: string }[]) => {
-        console.log("📋 Presence list received:", data, "users");
-        const onlineUsers = data.filter((u) => u.isOnline).map((u) => u.userId);
-        dispatch(setOnlineUsers(onlineUsers));
+        console.log("📋 Presence list received:", data);
+
+        const presenceMap = data.reduce((acc, u) => {
+          acc[u.userId] = {
+            isOnline: u.isOnline,
+            lastSeen: u.lastSeen,
+          };
+          return acc;
+        }, {} as Record<string, { isOnline: boolean; lastSeen?: string }>);
+
+        dispatch(setUserPresence(presenceMap));
       }
     );
 

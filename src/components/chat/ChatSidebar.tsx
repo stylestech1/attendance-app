@@ -1,5 +1,4 @@
 "use client";
-
 import { useAuth } from "@/context/AuthContext";
 import {
   useCreateOrGetConversationMutation,
@@ -7,9 +6,7 @@ import {
 } from "@/redux/api/chatApi";
 import { fetchUserProfile } from "@/redux/features/usersSlice";
 import { RootState, useAppDispatch, useAppSelector } from "@/redux/store";
-import { useChatSocket } from "@/services/useChatSocket";
 import { Conversation } from "@/types/chat";
-import { formatLastSeen } from "@/utils/formatLastSeen";
 import {
   Search,
   MessageSquare,
@@ -50,18 +47,15 @@ export default function ChatSidebar({
     (state: RootState) => state.chat.onlineUsers
   );
 
+  const presenceList = useAppSelector(
+    (state: RootState) => state.chat.presence
+  );
+
   const getConvId = (conv: Conversation) => conv.id;
 
   const unreadCounts = useAppSelector(
     (state: RootState) => state.chat.unreadCounts
   );
-
-  /* ===================== SOCKET ===================== */
-  const { getPresenceList } = useChatSocket();
-
-  useEffect(() => {
-    getPresenceList?.();
-  }, [getPresenceList]);
 
   /* -------------------- FETCH PROFILE -------------------- */
   useEffect(() => {
@@ -93,7 +87,11 @@ export default function ChatSidebar({
   });
 
   /* ===================== HELPERS ===================== */
-  const isUserOnline = (userId: string) => onlineUsers.includes(userId);
+  const isUserOnline = (userId: string) =>
+    presenceList[userId]?.isOnline === true;
+
+  console.log("🟢 presence", presenceList);
+  console.log("🟢 onlineUsers", onlineUsers);
 
   const hasConversationWithUser = (userId: string) =>
     conversationsArray.some((conv) =>

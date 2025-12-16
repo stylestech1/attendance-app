@@ -135,6 +135,7 @@ const chatSlice = createSlice({
       state.presence[userId] = {
         ...state.presence[userId],
         isOnline: true,
+        lastSeen: undefined,
       };
     },
 
@@ -168,10 +169,17 @@ const chatSlice = createSlice({
         Record<string, { isOnline: boolean; lastSeen?: string }>
       >
     ) {
-      state.presence = action.payload;
-      state.onlineUsers = Object.entries(action.payload)
+      state.presence = { ...action.payload };
+
+      state.onlineUsers = Object.entries(state.presence)
         .filter(([_, v]) => v.isOnline)
         .map(([userId]) => userId);
+
+      Object.entries(state.presence).forEach(([userId, data]) => {
+        if (!data.isOnline && !data.lastSeen) {
+          state.presence[userId].lastSeen = new Date().toISOString();
+        }
+      });
     },
   },
 });
@@ -190,6 +198,7 @@ export const {
   setUserOnline,
   setUserOffline,
   setOnlineUsers,
+  setUserPresence,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;
