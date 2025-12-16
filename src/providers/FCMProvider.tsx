@@ -1,7 +1,7 @@
 "use client";
 import { useNotificationSound } from "@/hooks/useNotificationSound";
 import { useSaveFCMTokenMutation } from "@/redux/api/notificationApi";
-import { setFCMToken, setPermission } from "@/redux/features/notificationSlice";
+import { incrementUnread, setFCMToken, setPermission } from "@/redux/features/notificationSlice";
 import { generateFCMToken, messaging } from "@/firesbase/firebase";
 import { onMessage } from "firebase/messaging";
 import { useAppDispatch } from "@/redux/store";
@@ -49,6 +49,7 @@ const FCMProvider = ({ children }: { children: React.ReactNode }) => {
         const title = payload.notification?.title ?? "New Notification";
         const body = payload.notification?.body ?? "";
 
+        dispatch(incrementUnread())
         playSound();
 
         toast.custom(() => (

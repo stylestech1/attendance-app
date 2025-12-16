@@ -3,11 +3,13 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 interface NotificationsState {
   fcmToken: string | null;
   permission: NotificationPermission | null;
+  unreadCount: number;
 }
 
 const initialState: NotificationsState = {
   fcmToken: null,
   permission: null,
+  unreadCount: 0,
 };
 
 const notificationsSlice = createSlice({
@@ -21,11 +23,15 @@ const notificationsSlice = createSlice({
     setPermission(state, action: PayloadAction<NotificationPermission>) {
       state.permission = action.payload;
     },
+    incrementUnread(state) {
+      state.unreadCount += 1;
+    },
+    resetUnread(state) {
+      state.unreadCount = 0;
+    },
   },
 });
 
-export const {
-  setFCMToken,
-  setPermission,
-} = notificationsSlice.actions;
+export const { setFCMToken, setPermission, incrementUnread, resetUnread } =
+  notificationsSlice.actions;
 export default notificationsSlice.reducer;

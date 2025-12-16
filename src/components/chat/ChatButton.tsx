@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useGetUserConversationsQuery } from "@/redux/api/chatApi";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAppSelector } from "@/redux/store";
 
 export default function ChatButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,6 +15,9 @@ export default function ChatButton() {
   const { data: conversations = [] } = useGetUserConversationsQuery(undefined, {
     skip: !isAuthenticated || !isOpen,
   });
+  const notifyCount = useAppSelector(
+    (state) => state.notifications.unreadCount
+  );
 
   if (!isAuthenticated) return null;
 
@@ -40,9 +44,16 @@ export default function ChatButton() {
         >
           <div className="relative">
             <MessageSquare className="w-7 h-7 transition-transform duration-300 group-hover:scale-110" />
-            {unreadCount > 0 && (
+            {/* {unreadCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg animate-pulse">
                 {unreadCount}
+              </span>
+            )} */}
+            {notifyCount > 0 && (
+              <span
+                className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
+              >
+                {notifyCount}
               </span>
             )}
             {isHovered && (
@@ -56,7 +67,7 @@ export default function ChatButton() {
               </div>
             )}
           </div>
-          
+
           {/* Floating particles effect */}
           <div className="absolute inset-0 overflow-hidden rounded-2xl">
             {[...Array(3)].map((_, i) => (
@@ -66,7 +77,7 @@ export default function ChatButton() {
                 style={{
                   left: `${20 + i * 30}%`,
                   animationDelay: `${i * 0.3}s`,
-                  animationDuration: '3s',
+                  animationDuration: "3s",
                 }}
               />
             ))}
@@ -75,8 +86,15 @@ export default function ChatButton() {
       )}
       <style jsx global>{`
         @keyframes float {
-          0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
-          50% { transform: translateY(-10px) scale(1.2); opacity: 0.6; }
+          0%,
+          100% {
+            transform: translateY(0) scale(1);
+            opacity: 0.3;
+          }
+          50% {
+            transform: translateY(-10px) scale(1.2);
+            opacity: 0.6;
+          }
         }
         .animate-float {
           animation: float 3s ease-in-out infinite;
