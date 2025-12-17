@@ -202,7 +202,7 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
                       </div>
                     )}
 
-                    <p className="break-words leading-relaxed whitespace-pre-wrap">
+                    <p className="break-words leading-relaxed whitespace-pre-wrap" dir="auto">
                       {message.text}
                     </p>
 
