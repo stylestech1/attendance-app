@@ -63,13 +63,13 @@ export const useChatSocket = () => {
       SOCKET_EVENTS.SEEN_UPDATE,
       ({
         conversationId,
-        userId,
+        currentUserId,
       }: {
         conversationId: string;
-        userId: string;
+        currentUserId: string;
       }) => {
         console.log("👁️ Messages seen in conversation:", conversationId);
-        dispatch(markMessageSeen({ conversationId, userId }));
+        dispatch(markMessageSeen({ conversationId, currentUserId }));
       }
     );
 
@@ -77,13 +77,13 @@ export const useChatSocket = () => {
       SOCKET_EVENTS.SEEN_ACKNOWLEDGED,
       ({
         conversationId,
-        userId,
+        currentUserId,
       }: {
         conversationId: string;
-        userId: string;
+        currentUserId: string;
       }) => {
-        console.log("✅ Seen acknowledged by user:", userId);
-        dispatch(markMessageSeen({ conversationId, userId }));
+        console.log("✅ Seen acknowledged by user:", currentUserId);
+        dispatch(markMessageSeen({ conversationId, currentUserId }));
       }
     );
 
