@@ -232,9 +232,6 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150" />
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-300" />
                 </div>
-                <div className="text-sm text-gray-600">
-                  <span>typing...</span>
-                </div>
               </div>
             </div>
           </div>

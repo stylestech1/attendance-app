@@ -127,7 +127,7 @@ export default function ChatSidebar({
 
   /* ===================== UI ===================== */
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-x-hidden">
       {/* ================= HEADER ================= */}
       <div className="p-4 border-b flex items-start justify-between">
         <div className="flex items-center gap-3">
@@ -244,7 +244,7 @@ export default function ChatSidebar({
                       </div>
 
                       {conv.lastMessage && (
-                        <p className="text-sm text-gray-600 truncate">
+                        <p className="text-sm text-gray-600 truncate w-50">
                           {conv.lastMessage.text}
                         </p>
                       )}
