@@ -443,9 +443,9 @@ const EmployeePage = () => {
   const formatTime = (dateString: string) => {
     if (!dateString) return "-";
     return new Date(dateString).toLocaleTimeString([], {
-      hour: "2-digit",
+      hour: "numeric",
       minute: "2-digit",
-      hour12: false,
+      hour12: true,
     });
   };
 
@@ -509,10 +509,10 @@ const EmployeePage = () => {
               <div className="text-sm text-gray-600 mb-1">Current Time</div>
               <div className="text-xl font-bold text-gray-800">
                 {currentTime.toLocaleTimeString([], {
-                  hour: "2-digit",
+                  hour: "numeric",
                   minute: "2-digit",
                   second: "2-digit",
-                  hour12: false,
+                  hour12: true,
                 })}
               </div>
             </div>

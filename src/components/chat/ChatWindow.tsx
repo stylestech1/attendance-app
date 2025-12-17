@@ -116,9 +116,9 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
 
   const formatMessageTime = (dateString: string) => {
     try {
-      return format(new Date(dateString), "HH:mm");
+      return format(new Date(dateString), "h:mm a");
     } catch {
-      return "00:00";
+      return "00:00 aعاوزm";
     }
   };
 
@@ -203,23 +203,20 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
                         : "bg-white text-gray-800 rounded-bl-none border border-gray-200"
                     }`}
                   >
+                    <p
+                      className="break-words leading-relaxed whitespace-pre-wrap pb-2"
+                      dir="auto"
+                    >
+                      {message.text}
+                    </p>
+
                     {!isOwnMessage && (
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-bold text-gray-900 text-sm">
-                          {message.sender?.name || "User"}
-                        </span>
                         <span className="text-xs text-gray-500">
                           {messageTime}
                         </span>
                       </div>
                     )}
-
-                    <p
-                      className="break-words leading-relaxed whitespace-pre-wrap"
-                      dir="auto"
-                    >
-                      {message.text}
-                    </p>
 
                     {isOwnMessage && (
                       <div className="flex items-center gap-2 mt-2 ml-auto text-xs opacity-80">

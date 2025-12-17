@@ -8,7 +8,7 @@ export const formatLastSeen = (lastSeen?: string, isOnline?: boolean) => {
   const diffHours = differenceInHours(new Date(), lastSeenDate);
 
   if (diffHours < 24) {
-    return `Last seen at ${format(lastSeenDate, "HH:mm")}`;
+    return `Last seen at ${format(lastSeenDate, "h:mm a")}`;
   }
 
   return `Last seen on ${format(lastSeenDate, "dd/MM/yyyy")}`;
