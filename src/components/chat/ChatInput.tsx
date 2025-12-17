@@ -79,15 +79,44 @@ export default function ChatInput({ conversationId }: ChatInputProps) {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== "Enter") return;
+
+    if (e.shiftKey) {
       e.preventDefault();
-      handleSend();
+
+      const target = e.currentTarget;
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+
+      const newValue = message.slice(0, start) + "\n" + message.slice(end);
+
+      setMessage(newValue);
+
+      requestAnimationFrame(() => {
+        target.selectionStart = target.selectionEnd = start + 1;
+      });
+
+      return;
     }
+
+    e.preventDefault();
+    handleSend();
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
+
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+        textareaRef.current.style.height = `${Math.min(
+          textareaRef.current.scrollHeight,
+          120
+        )}px`;
+      }
+    });
+
     if (e.target.value.trim()) startTyping();
     else stopTyping();
   };
@@ -107,7 +136,7 @@ export default function ChatInput({ conversationId }: ChatInputProps) {
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           placeholder="Type your message here..."
-          className="w-full py-4 px-5 pr-24 resize-none focus:outline-none text-gray-800 placeholder-gray-400 bg-transparent min-h-[56px] max-h-[120px]"
+          className="w-full py-4 px-5 pr-24 resize-none focus:outline-none text-gray-800 placeholder-gray-400 bg-transparent min-h-[56px] max-h-[120px] overflow-y-auto"
           rows={1}
           maxLength={500}
         />
