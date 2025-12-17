@@ -7,7 +7,6 @@ import {
   setTyping,
   setUserOnline,
   setUserOffline,
-  setOnlineUsers,
   setUserPresence,
 } from "@/redux/features/chatSlice";
 import { socketService } from "@/services/socketService";
@@ -206,13 +205,11 @@ export const useChatSocket = () => {
 
   return {
     joinConversation: (conversationId: string) => {
-      // selectedConversationId = conversationId;
       socketService.joinConversation(conversationId);
     },
 
     leaveConversation: (conversationId: string) => {
       if (selectedConversationId === conversationId) {
-        // selectedConversationId = null;
       }
       socketService.leaveConversation(conversationId);
     },

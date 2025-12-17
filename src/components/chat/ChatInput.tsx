@@ -138,11 +138,10 @@ export default function ChatInput({ conversationId }: ChatInputProps) {
           placeholder="Type your message here..."
           className="w-full py-4 px-5 pr-24 resize-none focus:outline-none text-gray-800 placeholder-gray-400 bg-transparent min-h-[56px] max-h-[120px] overflow-y-auto"
           rows={1}
-          maxLength={500}
         />
         <div className="absolute right-4 bottom-3 flex items-center gap-3">
           <span className="text-xs text-gray-400 font-medium">
-            {message.length}/500
+            {message.length}
           </span>
         </div>
       </div>
