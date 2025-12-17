@@ -15,7 +15,7 @@ interface ChatWindowProps {
 
 export default function ChatWindow({ conversationId }: ChatWindowProps) {
   const { auth } = useAuth();
-  const currentUserId = auth.id;
+  const currentUserId = auth.id ?? "";
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
@@ -36,10 +36,30 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
     skip: liveMessages.length > 0,
   });
 
-  useMarkMessagesSeen(conversationId);
+  const { markAsSeen } = useMarkMessagesSeen(conversationId);
+
+  useEffect(() => {
+    const handleScrollToBottom = () => {
+      if (containerRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+        const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+
+        if (isAtBottom) {
+          markAsSeen();
+        }
+      }
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener("scroll", handleScrollToBottom);
+      return () =>
+        container.removeEventListener("scroll", handleScrollToBottom);
+    }
+  }, [markAsSeen]);
 
   const isOtherTyping = useMemo(() => {
-    if(!conversationId) return false
+    if (!conversationId) return false;
     return typingState[conversationId] || false;
   }, [typingState, conversationId]);
 
@@ -62,15 +82,6 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     );
   }, [apiMessages, liveMessages]);
-
-  // الحصول على اسم المستخدم الآخر من الرسائل
-  const otherUserName = useMemo(() => {
-    // ابحث عن أول رسالة ليست من المستخدم الحالي
-    const otherMessage = allMessages.find(
-      (msg) => msg.sender?.id !== currentUserId
-    );
-    return otherMessage?.sender?.name || "User";
-  }, [allMessages, currentUserId]);
 
   const groupedMessages = useMemo(() => {
     const groups: { [key: string]: Message[] } = {};
@@ -133,6 +144,7 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
         Loading Messages...
       </div>
     );
+
   if (error)
     return (
       <div className="flex flex-col items-center justify-center h-full">
@@ -202,7 +214,10 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
                       </div>
                     )}
 
-                    <p className="break-words leading-relaxed whitespace-pre-wrap" dir="auto">
+                    <p
+                      className="break-words leading-relaxed whitespace-pre-wrap"
+                      dir="auto"
+                    >
                       {message.text}
                     </p>
 

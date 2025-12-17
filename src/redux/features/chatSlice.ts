@@ -100,17 +100,20 @@ const chatSlice = createSlice({
     },
 
     /* ----------------------------- MARK SEEN ------------------------------ */
-    markMessageSeenLocal(state, action: PayloadAction<string>) {
-      const convId = action.payload;
+    markMessageSeen: (
+      state,
+      action: PayloadAction<{
+        conversationId: string;
+        currentUserId?: string;
+      }>
+    ) => {
+      const { conversationId, currentUserId } = action.payload;
+      const messages = state.liveMessages[conversationId] || [];
 
-      state.liveMessages[convId]?.forEach((msg) => {
-        msg.seen = true;
-      });
-
-      if (state.conversations[convId]?.lastMessage) {
-        state.conversations[convId].lastMessage!.seen = true;
-      }
-      state.unreadCounts[convId] = 0;
+      state.liveMessages[conversationId] = messages.map((msg) => ({
+        ...msg,
+        seen: msg.sender?.id !== currentUserId ? true : msg.seen,
+      }));
     },
 
     /* -------------------------- ADD CONVERSATION --------------------------- */
@@ -192,7 +195,7 @@ export const {
   setSelectedConversation,
   addLiveMessage,
   upsertConversation,
-  markMessageSeenLocal,
+  markMessageSeen,
   addConversationLocal,
   setTyping,
   setUserOnline,

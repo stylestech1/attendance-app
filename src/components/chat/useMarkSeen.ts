@@ -1,45 +1,45 @@
-"use client";
-
+import { useAuth } from "@/context/AuthContext";
+import { markMessageSeen } from "@/redux/features/chatSlice";
+import { useAppDispatch, useAppSelector } from "@/redux/store";
+import { socketService } from "@/services/socketService";
 import { useEffect } from "react";
-import { useMarkMessagesSeenMutation } from "@/redux/api/chatApi";
-import { useAppSelector } from "@/redux/store";
 
 export const useMarkMessagesSeen = (conversationId: string | null) => {
-  const [markSeen] = useMarkMessagesSeenMutation();
+  const dispatch = useAppDispatch();
   const messages = useAppSelector(
     (state) => state.chat.liveMessages[conversationId || ""] || []
   );
+  const { auth } = useAuth();
+  const currentUserId = auth.id;
 
-  useEffect(() => {
+  const markAsSeen = () => {
     if (!conversationId) return;
 
-    const hasUnseenMessages = messages.some(msg => !msg.seen);
-    
-    if (hasUnseenMessages) {
-      const markAsSeen = async () => {
-        try {
-          await markSeen({ conversationId }).unwrap();
-          console.log("✅ Messages marked as seen for conversation:", conversationId);
-        } catch (error) {
-          console.error("❌ Failed to mark messages as seen:", error);
-        }
-      };
+    const hasUnseen = messages.some(
+      (msg) => !msg.seen && msg.sender?.id !== currentUserId
+    );
 
-      // Mark as seen immediately
-      markAsSeen();
+    if (!hasUnseen) return;
+    if (!currentUserId) return;
 
-      // Mark as seen when window gains focus
-      const handleFocus = () => {
-        markAsSeen();
-      };
+    dispatch(
+      markMessageSeen({
+        conversationId,
+        currentUserId,
+      })
+    );
 
-      window.addEventListener("focus", handleFocus);
+    socketService.markSeen(conversationId);
+  };
 
-      return () => {
-        window.removeEventListener("focus", handleFocus);
-      };
-    }
-  }, [conversationId, messages, markSeen]);
+  useEffect(() => {
+    markAsSeen();
 
-  return null;
+    const handleFocus = () => markAsSeen();
+    window.addEventListener("focus", handleFocus);
+
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [conversationId]);
+
+  return { markAsSeen };
 };

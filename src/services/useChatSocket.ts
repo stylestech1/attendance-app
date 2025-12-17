@@ -3,11 +3,11 @@ import { useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
 import {
   addLiveMessage,
-  markMessageSeenLocal,
   setTyping,
   setUserOnline,
   setUserOffline,
   setUserPresence,
+  markMessageSeen,
 } from "@/redux/features/chatSlice";
 import { socketService } from "@/services/socketService";
 import { SOCKET_EVENTS } from "@/constants/socketEvents";
@@ -61,17 +61,29 @@ export const useChatSocket = () => {
 
     const offSeenUpdate = socketService.on(
       SOCKET_EVENTS.SEEN_UPDATE,
-      ({ conversationId }: { conversationId: string }) => {
+      ({
+        conversationId,
+        userId,
+      }: {
+        conversationId: string;
+        userId: string;
+      }) => {
         console.log("👁️ Messages seen in conversation:", conversationId);
-        dispatch(markMessageSeenLocal(conversationId));
+        dispatch(markMessageSeen({ conversationId, userId }));
       }
     );
 
     const offSeenAck = socketService.on(
       SOCKET_EVENTS.SEEN_ACKNOWLEDGED,
-      ({ conversationId }: { conversationId: string }) => {
-        console.log("✅ Seen acknowledged for conversation:", conversationId);
-        dispatch(markMessageSeenLocal(conversationId));
+      ({
+        conversationId,
+        userId,
+      }: {
+        conversationId: string;
+        userId: string;
+      }) => {
+        console.log("✅ Seen acknowledged by user:", userId);
+        dispatch(markMessageSeen({ conversationId, userId }));
       }
     );
 
