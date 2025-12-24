@@ -282,7 +282,7 @@ export default function ChatSidebar({
                       </div>
 
                       {conv.lastMessage ? (
-                        <p className="text-sm text-gray-600 truncate">
+                        <p className="text-sm text-gray-600 truncate w-50">
                           {conv.lastMessage.text}
                         </p>
                       ) : (
@@ -333,14 +333,14 @@ export default function ChatSidebar({
 
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-gray-900">{user.name}</h3>
+                      <h3 className="font-semibold text-gray-900 truncate w-25">{user.name}</h3>
                       {isOnline && (
                         <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
                           Online
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600">{user.position}</p>
+                    <p className="text-sm text-gray-600 truncate w-25">{user.position}</p>
                   </div>
                 </div>
 
