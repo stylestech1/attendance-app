@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useAddMessageMutation } from "@/redux/api/chatApi";
 import { socketService } from "@/services/socketService";
 import { SOCKET_EVENTS } from "@/constants/socketEvents";
-import { Send } from "lucide-react";
+import { Send, Image, Mic, Smile, Paperclip, Clock } from "lucide-react";
 import { useAppDispatch } from "@/redux/store";
 import { setTyping as setTypingLocal } from "@/redux/features/chatSlice";
 
@@ -128,39 +128,56 @@ export default function ChatInput({ conversationId }: ChatInputProps) {
   }, []);
 
   return (
-    <div className="flex items-end gap-3">
-      <div className="flex-1 relative bg-white border border-gray-300 rounded-2xl shadow-inner overflow-hidden">
-        <textarea
-          ref={textareaRef}
-          value={message}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Type your message here..."
-          className="w-full py-4 px-5 pr-24 resize-none focus:outline-none text-gray-800 placeholder-gray-400 bg-transparent min-h-[56px] max-h-[120px] overflow-y-auto"
-          rows={1}
-        />
-        <div className="absolute right-4 bottom-3 flex items-center gap-3">
-          <span className="text-xs text-gray-400 font-medium">
-            {message.length}
-          </span>
+    <div className="mx-auto p-3 border-t border-gray-100">
+      {/* Input area */}
+      <div className="flex items-end gap-3">
+        <div className="flex-1 relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 blur-lg rounded-2xl"></div>
+          <div className="relative bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden hover:border-blue-300 transition-all duration-300">
+            <textarea
+              ref={textareaRef}
+              value={message}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Type your message here..."
+              className="w-full py-4 px-5 pr-32 resize-none focus:outline-none text-gray-800 placeholder-gray-500 bg-transparent min-h-[60px] max-h-[120px] overflow-y-auto text-[15px] leading-relaxed"
+              rows={1}
+            />
+            <div className="absolute right-4 bottom-3 flex items-center gap-4">
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-100 rounded-lg">
+                <Clock className="w-3.5 h-3.5 text-gray-500" />
+                <span className="text-xs text-gray-600 font-medium">
+                  {message.length}/2000
+                </span>
+              </div>
+              {isLoading && (
+                <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              )}
+            </div>
+          </div>
         </div>
-      </div>
 
-      <button
-        onClick={handleSend}
-        disabled={!message.trim() || isLoading}
-        className={`p-4 rounded-full flex items-center justify-center transition-all duration-200 shadow-md ${
-          message.trim()
-            ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:shadow-lg"
-            : "bg-gray-200 text-gray-400 cursor-not-allowed"
-        } ${isLoading ? "opacity-50" : ""}`}
-      >
-        {isLoading ? (
-          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-        ) : (
-          <Send className="w-6 h-6" />
-        )}
-      </button>
+        <button
+          onClick={handleSend}
+          disabled={!message.trim() || isLoading}
+          className={`relative p-5 rounded-2xl flex items-center justify-center transition-all duration-200 ${
+            message.trim()
+              ? "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl hover:scale-105"
+              : "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-400 cursor-not-allowed shadow-sm"
+          } ${isLoading ? "opacity-70" : ""}`}
+        >
+          {message.trim() && !isLoading && (
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-600/20 rounded-2xl animate-pulse"></div>
+          )}
+          <div className="relative">
+            {isLoading ? (
+              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Send className="w-6 h-6" />
+            )}
+          </div>
+        </button>
+      </div>
     </div>
   );
 }

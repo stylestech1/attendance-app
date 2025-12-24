@@ -12,7 +12,18 @@ import ChatSidebar from "@/components/chat/ChatSidebar";
 import ChatWindow from "@/components/chat/ChatWindow";
 import ChatInput from "@/components/chat/ChatInput";
 
-import { MessageSquare, Users, AlertCircle } from "lucide-react";
+import {
+  MessageSquare,
+  Users,
+  AlertCircle,
+  Wifi,
+  WifiOff,
+  MoreVertical,
+  Phone,
+  Video,
+  Info,
+  RefreshCw,
+} from "lucide-react";
 import { Conversation } from "@/types/chat";
 import { formatLastSeen } from "@/utils/formatLastSeen";
 
@@ -88,16 +99,32 @@ export default function ChatPage() {
     return selectedConversation.members.find((m) => m.id !== auth.id) ?? null;
   }, [selectedConversation, auth?.id]);
 
+  const isOtherUserOnline = otherUser
+    ? presence[otherUser.id]?.isOnline
+    : false;
+
   /* -------------------------------------------------------------------------- */
   /*                             LOADING / AUTH UI                              */
   /* -------------------------------------------------------------------------- */
 
   if (authLoading || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading chat...</p>
+          <div className="relative mb-6">
+            <div className="w-20 h-20 rounded-full border-4 border-gray-200 border-t-blue-500 border-r-blue-400 animate-spin mx-auto"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center shadow-inner">
+                <MessageSquare className="w-6 h-6 text-blue-500" />
+              </div>
+            </div>
+          </div>
+          <p className="text-gray-700 font-medium">
+            Loading your conversations
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Preparing your chat experience...
+          </p>
         </div>
       </div>
     );
@@ -105,16 +132,26 @@ export default function ChatPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-white p-8 rounded-xl shadow-md text-center max-w-md">
-          <MessageSquare className="w-14 h-14 text-blue-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Welcome to Chat</h2>
-          <p className="text-gray-600 mb-6">
-            Please login to access your conversations.
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
+        <div className="bg-white p-10 rounded-2xl shadow-xl text-center max-w-md mx-4 border border-gray-100">
+          <div className="relative mb-6">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center mx-auto shadow-lg">
+              <MessageSquare className="w-12 h-12 text-blue-500" />
+            </div>
+            <div className="absolute -top-2 -right-2 w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-md">
+              <span className="text-white text-lg">💬</span>
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">
+            Welcome to Chat
+          </h2>
+          <p className="text-gray-600 mb-8 leading-relaxed">
+            Connect with your team and colleagues in real-time. Please login to
+            access your conversations.
           </p>
           <a
             href="/login"
-            className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+            className="inline-block bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8 py-3.5 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
           >
             Go to Login
           </a>
@@ -125,18 +162,29 @@ export default function ChatPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-white p-8 rounded-xl shadow-md text-center max-w-md">
-          <AlertCircle className="w-14 h-14 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Connection Error</h2>
-          <p className="text-gray-600 mb-6">
-            Could not load your conversations.
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
+        <div className="bg-white p-10 rounded-2xl shadow-xl text-center max-w-md mx-4 border border-gray-100">
+          <div className="relative mb-6">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center mx-auto shadow-lg">
+              <AlertCircle className="w-12 h-12 text-red-500" />
+            </div>
+            <div className="absolute -top-2 -right-2 w-10 h-10 bg-gradient-to-r from-red-400 to-pink-500 rounded-full flex items-center justify-center shadow-md">
+              <span className="text-white text-lg">!</span>
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">
+            Connection Error
+          </h2>
+          <p className="text-gray-600 mb-8 leading-relaxed">
+            Could not load your conversations. Please check your internet
+            connection and try again.
           </p>
           <button
             onClick={() => refetch()}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8 py-3.5 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center gap-3 mx-auto"
           >
-            Retry
+            <RefreshCw className="w-5 h-5" />
+            Retry Loading
           </button>
         </div>
       </div>
@@ -148,9 +196,9 @@ export default function ChatPage() {
   /* -------------------------------------------------------------------------- */
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
       {/* Sidebar */}
-      <aside className="w-80 bg-white border-r">
+      <aside className="w-80 bg-white border-r border-gray-100 shadow-lg">
         <ChatSidebar
           conversations={conversations}
           selectedConvId={selectedConvId}
@@ -163,70 +211,96 @@ export default function ChatPage() {
         {selectedConversation ? (
           <>
             {/* Header */}
-            <div className="bg-white border-b px-6 py-4 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="relative flex items-center gap-2">
-                  {otherUser ? (
-                    <>
-                      <div className="relative">
-                        {/* User avatar */}
-                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+            <div className="border-b border-gray-100 px-8 py-6.5 flex justify-between items-center shadow-sm">
+              <div className="flex items-center gap-4">
+                {otherUser ? (
+                  <>
+                    <div className="relative">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+                        <span className="text-white font-bold text-lg">
                           {otherUser?.name?.charAt(0) ?? "U"}
-                        </div>
-
-                        {/* Online/offline dot */}
-                        <span
-                          className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
-                            presence[otherUser?.id]?.isOnline
-                              ? "bg-green-500"
-                              : "bg-gray-400"
-                          }`}
-                        />
+                        </span>
                       </div>
+                      <span
+                        className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-3 border-white shadow-sm ${
+                          isOtherUserOnline ? "bg-green-500" : "bg-gray-400"
+                        }`}
+                      />
+                    </div>
 
-                      {/* User info */}
-                      <div className="flex flex-col">
-                        <h3 className="font-semibold text-gray-800">
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-3">
+                        <h3 className="font-bold text-gray-900 text-lg">
                           {otherUser?.name ?? "Unknown User"}
                         </h3>
-                        <p className="text-xs text-gray-400">
-                          {formatLastSeen(
-                            presence[otherUser?.id]?.lastSeen,
-                            presence[otherUser?.id]?.isOnline
-                          )}
-                        </p>
                       </div>
-                    </>
-                  ) : (
-                    "Offline"
-                  )}
-                </div>
-              </div>
-
-              <div className="text-sm text-gray-500">
-                {onlineUsers.length} online
+                      <p className="text-sm text-gray-500 mt-1">
+                        {formatLastSeen(
+                          presence[otherUser?.id]?.lastSeen,
+                          presence[otherUser?.id]?.isOnline
+                        )}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center shadow-md">
+                      <Users className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-lg">
+                        Group Chat
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Multiple participants
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 bg-white">
+            <div className="flex-1 overflow-y-auto bg-gradient-to-b from-white to-gray-50/50">
               <ChatWindow conversationId={selectedConversation.id} />
             </div>
 
             {/* Input */}
-            <div className="border-t bg-white p-4">
+            <div className="border-t border-gray-100 bg-white shadow-sm">
               <ChatInput conversationId={selectedConversation.id} />
             </div>
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <Users className="w-20 h-20 text-blue-400 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">
-              Select a conversation
+          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            <div className="relative mb-8">
+              <div className="w-40 h-40 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center shadow-2xl">
+                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-200 to-indigo-200 flex items-center justify-center shadow-inner">
+                    <Users className="w-14 h-14 text-blue-500" />
+                  </div>
+                </div>
+              </div>
+              <div className="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                <span className="text-white text-2xl">💬</span>
+              </div>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-3">
+              Welcome to Chat
             </h3>
-            <p className="text-gray-500">
-              Choose a chat from the sidebar to start messaging
+            <p className="text-gray-600 max-w-md mb-8 leading-relaxed">
+              Select a conversation from the sidebar to start messaging. Connect
+              with your colleagues and team members in real-time.
             </p>
+            <div className="flex items-center gap-6 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>{onlineUsers.length} users online</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span>{conversations.length} conversations</span>
+              </div>
+            </div>
           </div>
         )}
       </main>

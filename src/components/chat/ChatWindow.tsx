@@ -118,7 +118,7 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
     try {
       return format(new Date(dateString), "h:mm a");
     } catch {
-      return "00:00 aعاوزm";
+      return "00:00";
     }
   };
 
@@ -140,94 +140,171 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
 
   if (isLoading)
     return (
-      <div className="flex items-center justify-center h-full">
-        Loading Messages...
+      <div className="h-full flex flex-col items-center justify-center bg-gradient-to-b from-gray-50/80 to-white">
+        <div className="relative mb-8">
+          <div className="w-24 h-24 rounded-full border-[6px] border-gray-100 border-t-blue-500 border-r-blue-400 border-b-blue-300 animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center shadow-inner">
+              <div className="w-8 h-8 text-blue-500 animate-pulse">💬</div>
+            </div>
+          </div>
+        </div>
+        <div className="text-center space-y-2">
+          <p className="text-xl font-semibold text-gray-800">
+            Loading Conversation
+          </p>
+          <p className="text-gray-600 max-w-sm">
+            Fetching messages from the server...
+          </p>
+        </div>
       </div>
     );
 
   if (error)
     return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <p className="text-red-500 mb-4">Failed to load messages</p>
-        <button
-          onClick={() => refetch()}
-          className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Retry
-        </button>
+      <div className="h-full flex flex-col items-center justify-center bg-gradient-to-b from-gray-50/80 to-white px-6">
+        <div className="relative mb-8">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center shadow-lg">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center">
+              <RefreshCw className="w-10 h-10 text-red-500" />
+            </div>
+          </div>
+        </div>
+        <div className="text-center space-y-4">
+          <p className="text-xl font-semibold text-gray-800">
+            Connection Error
+          </p>
+          <p className="text-gray-600 max-w-sm">
+            Unable to load messages. Please check your connection and try again.
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="px-6 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-3 mx-auto"
+          >
+            <RefreshCw className="w-5 h-5" />
+            Refresh Messages
+          </button>
+        </div>
       </div>
     );
 
   return (
-    <div className="h-full flex flex-col relative">
+    <div className="h-full flex flex-col relative bg-gradient-to-b from-white to-gray-50/30">
       {showScrollButton && (
         <button
           onClick={scrollToBottom}
-          className="absolute bottom-24 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-10"
+          className="absolute bottom-24 right-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300 z-10 flex items-center justify-center group"
         >
-          ↓
+          <div className="w-6 h-6 transition-transform group-hover:-translate-y-1">
+            ↓
+          </div>
         </button>
       )}
 
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto space-y-6 p-2 scroll-smooth"
+        className="flex-1 overflow-y-auto space-y-8 p-4 md:p-6 lg:p-8 scroll-smooth bg-blue-50"
         onScroll={handleScroll}
       >
         {Object.entries(groupedMessages).map(([date, messages]) => (
-          <div key={date} className="space-y-4">
-            <div className="flex items-center justify-center my-6">
-              <div className="bg-blue-100 px-4 py-2 rounded-full">
-                <span className="text-sm font-semibold text-blue-700">
-                  {formatGroupDate(date)}
-                </span>
+          <div key={date} className="space-y-6">
+            <div className="flex items-center justify-center my-8">
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 blur-xl rounded-full group-hover:blur-2xl transition-all duration-500"></div>
+                <div className="relative bg-gradient-to-r from-white to-gray-50 px-6 py-3.5 rounded-2xl border border-gray-200 shadow-lg backdrop-blur-sm">
+                  <span className="text-sm font-semibold text-gray-700">
+                    {formatGroupDate(date)}
+                  </span>
+                </div>
               </div>
             </div>
 
             {messages.map((message: Message) => {
               const isOwnMessage = message.sender?.id === currentUserId;
               const messageTime = formatMessageTime(message.createdAt);
+              const senderInitial = message.sender?.name?.charAt(0) || "U";
 
               return (
                 <div
                   key={message.id}
                   className={`flex ${
                     isOwnMessage ? "justify-end" : "justify-start"
-                  } px-2`}
+                  } px-1 group`}
                 >
-                  <div
-                    className={`max-w-[70%] rounded-2xl px-5 py-3 shadow-sm ${
-                      isOwnMessage
-                        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-none"
-                        : "bg-white text-gray-800 rounded-bl-none border border-gray-200"
-                    }`}
-                  >
-                    <p
-                      className="break-words leading-relaxed whitespace-pre-wrap pb-2"
-                      dir="auto"
-                    >
-                      {message.text}
-                    </p>
-
+                  <div className="max-w-[85%] md:max-w-[75%] lg:max-w-[65%]">
                     {!isOwnMessage && (
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs text-gray-500">
-                          {messageTime}
-                        </span>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center shadow-md">
+                          <span className="text-white text-sm font-bold">
+                            {senderInitial}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">
+                              {messageTime}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     )}
 
-                    {isOwnMessage && (
-                      <div className="flex items-center gap-2 mt-2 ml-auto text-xs opacity-80">
-                        <span>{messageTime}</span>
-                        {message.seen ? (
-                          <CheckCheck className="w-4 h-4 text-blue-200" />
-                        ) : (
-                          <Check className="w-4 h-4 text-blue-200" />
-                        )}
+                    <div className="relative">
+                      <div
+                        className={`relative rounded-2xl px-5 py-4 shadow-lg ${
+                          isOwnMessage
+                            ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-br-sm"
+                            : "bg-white text-gray-800 rounded-bl-sm border border-gray-100 shadow-md"
+                        } ${
+                          message.seen && isOwnMessage
+                            ? "ring-1 ring-blue-300"
+                            : ""
+                        }`}
+                      >
+                        <p
+                          className="break-words leading-relaxed whitespace-pre-wrap pb-1 text-[15.5px]"
+                          dir="auto"
+                        >
+                          {message.text}
+                        </p>
+
+                        <div
+                          className={`flex items-center justify-between mt-3 ${
+                            isOwnMessage
+                              ? "pt-2 border-t border-blue-400/30"
+                              : "pt-2 border-t border-gray-100"
+                          }`}
+                        >
+                          <span
+                            className={`text-xs ${
+                              isOwnMessage ? "text-blue-100" : "text-gray-500"
+                            }`}
+                          >
+                            {messageTime}
+                          </span>
+
+                          {isOwnMessage && (
+                            <div className="flex items-center gap-1.5">
+                              {message.seen ? (
+                                <div className="flex items-center gap-1">
+                                  <CheckCheck className="w-4 h-4 text-blue-200" />
+                                  <span className="text-xs text-blue-200">
+                                    Seen
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1">
+                                  <Check className="w-4 h-4 text-blue-200" />
+                                  <span className="text-xs text-blue-200">
+                                    Sent
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               );
@@ -236,21 +313,60 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
         ))}
 
         {isOtherTyping && (
-          <div className="flex justify-start px-2">
-            <div className="max-w-[70%] bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-bl-none px-5 py-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150" />
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-300" />
+          <div className="flex justify-start px-1">
+            <div className="max-w-[85%] md:max-w-[75%] lg:max-w-[65%]">
+              <div className="flex items-center gap-3 mb-2 ml-14">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center shadow-md animate-pulse">
+                  <div className="w-4 h-4 text-white">👤</div>
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="absolute -left-2 top-3 w-4 h-4 bg-white border-l border-t border-gray-200 transform rotate-45 rounded-tl"></div>
+                <div className="relative bg-white text-gray-800 rounded-2xl rounded-bl-sm border border-gray-100 shadow-md px-5 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full animate-bounce"></div>
+                      <div className="w-3 h-3 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full animate-bounce delay-100"></div>
+                      <div className="w-3 h-3 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full animate-bounce delay-200"></div>
+                    </div>
+                    <span className="text-sm text-gray-600 font-medium">
+                      Typing...
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        <div ref={messagesEndRef} className="h-4" />
+        <div ref={messagesEndRef} className="h-8" />
       </div>
+
+      {allMessages.length === 0 && !isLoading && !error && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
+          <div className="relative mb-8">
+            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center shadow-2xl">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-200 to-indigo-200 flex items-center justify-center shadow-inner">
+                  <div className="w-10 h-10 text-blue-500">💬</div>
+                </div>
+              </div>
+            </div>
+            <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-white text-2xl">💬</span>
+            </div>
+          </div>
+          <div className="text-center space-y-3 max-w-md">
+            <p className="text-2xl font-bold text-gray-800">
+              Start the Conversation
+            </p>
+            <p className="text-gray-600">
+              No messages yet. Be the first to say hello and start chatting!
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
