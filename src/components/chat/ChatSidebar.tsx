@@ -355,7 +355,6 @@ export default function ChatSidebar({
                     </>
                   ) : (
                     <>
-                      <UserPlus className="w-4 h-4" />
                       Message
                     </>
                   )}
