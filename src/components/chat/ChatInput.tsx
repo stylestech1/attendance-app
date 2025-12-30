@@ -4,9 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import { useAddMessageMutation } from "@/redux/api/chatApi";
 import { socketService } from "@/services/socketService";
 import { SOCKET_EVENTS } from "@/constants/socketEvents";
-import { Send, Image, Mic, Smile, Paperclip, Clock } from "lucide-react";
-import { useAppDispatch } from "@/redux/store";
-import { setTyping as setTypingLocal } from "@/redux/features/chatSlice";
+import { Send, Clock } from "lucide-react";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 
 interface ChatInputProps {
   conversationId: string;
@@ -17,8 +16,9 @@ export default function ChatInput({ conversationId }: ChatInputProps) {
   const [addMessage, { isLoading }] = useAddMessageMutation();
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const dispatch = useAppDispatch();
-
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
   const socket = socketService.getSocket();
 
   useEffect(() => {
@@ -121,6 +121,33 @@ export default function ChatInput({ conversationId }: ChatInputProps) {
     else stopTyping();
   };
 
+  // -------------------- Handle outside click to close emoji picker --------------------
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        showEmojiPicker &&
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(target) &&
+        emojiButtonRef.current &&
+        !emojiButtonRef.current.contains(target)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
+  // -------------------- Handle Emoji --------------------
+  const onEmojiClick = (emojiObject: EmojiClickData) => {
+    setMessage((prev) => prev + emojiObject.emoji);
+    startTyping();
+  };
+
   useEffect(() => {
     return () => {
       stopTyping();
@@ -133,16 +160,35 @@ export default function ChatInput({ conversationId }: ChatInputProps) {
       <div className="flex items-end gap-3">
         <div className="flex-1 relative">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 blur-lg rounded-2xl"></div>
-          <div className="relative bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden hover:border-blue-300 transition-all duration-300">
+          <div className="relative flex-1 bg-white border border-gray-200 rounded-2xl shadow-sm hover:border-blue-300 transition-all duration-300">
+            {/* Emoji Toggle Button */}
+            <button
+              ref={emojiButtonRef}
+              type="button"
+              onClick={() => setShowEmojiPicker((prev) => !prev)}
+              className="cursor-pointer absolute left-3 top-1/2 -translate-y-1/2 z-20 rounded-full p-2 hover:bg-gray-100"
+            >
+              😊
+            </button>
+
             <textarea
               ref={textareaRef}
               value={message}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
               placeholder="Type your message here..."
-              className="w-full py-4 px-5 pr-32 resize-none focus:outline-none text-gray-800 placeholder-gray-500 bg-transparent min-h-[60px] max-h-[120px] overflow-y-auto text-[15px] leading-relaxed"
+              className="w-full py-4 pl-15 pr-32 resize-none focus:outline-none text-gray-800 placeholder-gray-500 bg-transparent min-h-[60px] max-h-[120px] overflow-y-auto text-[15px] leading-relaxed"
               rows={1}
             />
+
+            {showEmojiPicker && (
+              <div
+                ref={emojiPickerRef}
+                className="absolute left-3 bottom-full mb-2 z-50"
+              >
+                <EmojiPicker onEmojiClick={onEmojiClick}  />
+              </div>
+            )}
             <div className="absolute right-4 bottom-3 flex items-center gap-4">
               <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-100 rounded-lg">
                 <Clock className="w-3.5 h-3.5 text-gray-500" />
