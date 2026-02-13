@@ -24,6 +24,7 @@ import {
   FaRegClock,
 } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
+import { formatToCairoTime } from "@/utils/DateTime";
 
 // Types
 type TProfile = {
@@ -235,7 +236,6 @@ const EmployeeAttendance = () => {
   const handleLogout = () => {
     logout();
   };
-
   // set Loading
   if (loading) return <Loading />;
 
@@ -326,11 +326,10 @@ const EmployeeAttendance = () => {
 
               <button
                 onClick={toggleActive}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 ${
-                  profile?.active
-                    ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
-                    : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
-                }`}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 ${profile?.active
+                  ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+                  : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                  }`}
               >
                 {profile?.active ? (
                   <FaUserTimes size={16} />
@@ -463,12 +462,9 @@ const EmployeeAttendance = () => {
                         {record.checkInAt ? (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
                             <FaClock className="mr-1" size={12} />
-                            {new Date(record.checkInAt).toLocaleTimeString(
-                              "en-US",
-                              {
-                                timeZone: "Africa/Cairo",
-                              }
-                            )}
+
+                            {formatToCairoTime(record.checkInAt)}
+
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
@@ -480,12 +476,13 @@ const EmployeeAttendance = () => {
                         {record.checkOutAt ? (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
                             <FaClock className="mr-1" size={12} />
-                            {new Date(record.checkOutAt).toLocaleTimeString(
+                            {/* {new Date(record.checkOutAt).toLocaleTimeString(
                               "en-US",
                               {
                                 timeZone: "Africa/Cairo",
                               }
-                            )}
+                            )} */}
+                            {formatToCairoTime(record.checkOutAt)}
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">

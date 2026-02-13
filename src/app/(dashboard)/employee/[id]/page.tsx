@@ -20,6 +20,7 @@ import {
   FaCoffee,
   FaBusinessTime,
 } from "react-icons/fa";
+import { formatToCairoTime } from "@/utils/DateTime";
 
 // types
 type Attendance = {
@@ -654,17 +655,15 @@ const EmployeePage = () => {
           {/* Status Indicators */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div
-              className={`p-4 rounded-xl border ${
-                isCheckedIn
+              className={`p-4 rounded-xl border ${isCheckedIn
                   ? "bg-green-50 border-green-200 text-green-800"
                   : "bg-gray-50 border-gray-200 text-gray-600"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2">
                 <div
-                  className={`w-3 h-3 rounded-full ${
-                    isCheckedIn ? "bg-green-500" : "bg-gray-400"
-                  }`}
+                  className={`w-3 h-3 rounded-full ${isCheckedIn ? "bg-green-500" : "bg-gray-400"
+                    }`}
                 ></div>
                 <span className="font-medium">
                   Status: {isCheckedIn ? "Checked In" : "Checked Out"}
@@ -677,17 +676,15 @@ const EmployeePage = () => {
               )}
             </div>
             <div
-              className={`p-4 rounded-xl border ${
-                isBreak
+              className={`p-4 rounded-xl border ${isBreak
                   ? "bg-orange-50 border-orange-200 text-orange-800"
                   : "bg-gray-50 border-gray-200 text-gray-600"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2">
                 <div
-                  className={`w-3 h-3 rounded-full ${
-                    isBreak ? "bg-orange-500" : "bg-gray-400"
-                  }`}
+                  className={`w-3 h-3 rounded-full ${isBreak ? "bg-orange-500" : "bg-gray-400"
+                    }`}
                 ></div>
                 <span className="font-medium">
                   Break: {isBreak ? "On Break" : "Active"}
@@ -768,7 +765,7 @@ const EmployeePage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         {att.checkInAt ? (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
-                            {formatTime(att.checkInAt)}
+                            {formatToCairoTime(att.checkInAt)}
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
@@ -779,7 +776,7 @@ const EmployeePage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         {att.checkOutAt ? (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                            {formatTime(att.checkOutAt)}
+                            {formatToCairoTime(att.checkOutAt)}
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
