@@ -24,7 +24,7 @@ import {
   FaRegClock,
 } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
-import { formatToCairoTime } from "@/utils/DateTime";
+import { formatCairoDate, formatToCairoTime } from "@/utils/DateTime";
 
 // Types
 type TProfile = {
@@ -453,7 +453,7 @@ const EmployeeAttendance = () => {
                           </div>
                           <div>
                             <div className="font-semibold text-gray-900">
-                              {record.date.split("T")[0]}
+                              {formatCairoDate(record.date)}
                             </div>
                           </div>
                         </div>
@@ -462,9 +462,7 @@ const EmployeeAttendance = () => {
                         {record.checkInAt ? (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
                             <FaClock className="mr-1" size={12} />
-
                             {formatToCairoTime(record.checkInAt)}
-
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">

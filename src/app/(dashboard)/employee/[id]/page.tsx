@@ -20,7 +20,7 @@ import {
   FaCoffee,
   FaBusinessTime,
 } from "react-icons/fa";
-import { formatToCairoTime } from "@/utils/DateTime";
+import { formatCairoDate, formatToCairoTime } from "@/utils/DateTime";
 
 // types
 type Attendance = {
@@ -762,7 +762,7 @@ const EmployeePage = () => {
                           </div>
                           <div>
                             <div className="font-semibold text-gray-900">
-                              {att.date ? formatDate(att.date) : "No date"}
+                              {att.date ? formatCairoDate(att.date) : "No date"}
                             </div>
                           </div>
                         </div>
