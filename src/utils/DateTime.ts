@@ -1,14 +1,11 @@
-export const formatToCairoTime = (
-    dateString: string,
-    hour12: boolean = true
-): string => {
-    if (!dateString) return "";
+export const formatToCairoTime = (dateString: string): string => {
+  if (!dateString) return "";
 
-    return new Intl.DateTimeFormat("en-GB", {
-        timeZone: "Africa/Cairo",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12,
-    }).format(new Date(dateString));
+  const formatted = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Africa/Cairo",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).format(new Date(dateString));
+  return formatted.replace("AM", "Am").replace("PM", "Pm");
 };
