@@ -516,8 +516,9 @@ const EmployeePage = () => {
                     minute: "2-digit",
                     hour12: true,
                   })
-                  .replace("AM", "Am")
-                  .replace("PM", "Pm")}
+                  // .replace("AM", "Am")
+                  // .replace("PM", "Pm")
+                  }
 
               </div>
             </div>
