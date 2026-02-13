@@ -509,12 +509,16 @@ const EmployeePage = () => {
             <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-200">
               <div className="text-sm text-gray-600 mb-1">Current Time</div>
               <div className="text-xl font-bold text-gray-800">
-                {currentTime.toLocaleTimeString([], {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  second: "2-digit",
-                  hour12: true,
-                })}
+                {currentTime
+                  .toLocaleTimeString("en-US", {
+                    timeZone: "Africa/Cairo",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  })
+                  .replace("AM", "Am")
+                  .replace("PM", "Pm")}
+
               </div>
             </div>
 
@@ -656,8 +660,8 @@ const EmployeePage = () => {
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div
               className={`p-4 rounded-xl border ${isCheckedIn
-                  ? "bg-green-50 border-green-200 text-green-800"
-                  : "bg-gray-50 border-gray-200 text-gray-600"
+                ? "bg-green-50 border-green-200 text-green-800"
+                : "bg-gray-50 border-gray-200 text-gray-600"
                 }`}
             >
               <div className="flex items-center gap-2">
@@ -677,8 +681,8 @@ const EmployeePage = () => {
             </div>
             <div
               className={`p-4 rounded-xl border ${isBreak
-                  ? "bg-orange-50 border-orange-200 text-orange-800"
-                  : "bg-gray-50 border-gray-200 text-gray-600"
+                ? "bg-orange-50 border-orange-200 text-orange-800"
+                : "bg-gray-50 border-gray-200 text-gray-600"
                 }`}
             >
               <div className="flex items-center gap-2">
